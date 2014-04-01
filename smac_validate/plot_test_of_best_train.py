@@ -37,8 +37,7 @@ def plot_optimization_trace(times, performance_list, title, min_test, max_test, 
     # set initial limits
     auto_y_min = sys.maxint
     auto_y_max = -sys.maxint
-    # Yes this has to be -sys.maxint
-    auto_x_min = -sys.maxint
+    auto_x_min = sys.maxint
 
     for idx, performance in enumerate(performance_list):
         if log:
@@ -61,7 +60,7 @@ def plot_optimization_trace(times, performance_list, title, min_test, max_test, 
             init = performance[init_idx]
             init_idx += 1
         if init_idx != 0:
-            auto_x_min = max(times[init_idx], auto_x_min)
+            auto_x_min = min(times[init_idx], auto_x_min)
         auto_y_max = max(max(performance[init_idx:]), auto_y_max)
     auto_x_max = times[-1]
 
@@ -98,7 +97,6 @@ def plot_optimization_trace(times, performance_list, title, min_test, max_test, 
     elif x_max > x_min != 0:
         ax1.set_xlim([x_min, x_max])
     else:
-        print "khf"
         ax1.set_xlim([auto_x_min-0.1*abs(auto_x_min), auto_x_max + 0.1*abs(auto_x_max-auto_x_min)])
 
     leg = ax1.legend(loc='best', fancybox=True)

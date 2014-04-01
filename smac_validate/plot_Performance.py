@@ -37,7 +37,7 @@ def plot_optimization_trace(times, performance_list, title, name_list, log=False
 
     auto_y_min = sys.maxint
     auto_y_max = -sys.maxint
-    auto_x_min = -sys.maxint
+    auto_x_min = sys.maxint
 
     for idx, performance in enumerate(performance_list):
         color = colors.next()
@@ -67,7 +67,7 @@ def plot_optimization_trace(times, performance_list, title, name_list, log=False
             init_idx += 1
         if init_idx != 0:
             # And we also shift x_min
-            auto_x_min = max(times[init_idx], auto_x_min)
+            auto_x_min = min(times[init_idx], auto_x_min)
         auto_y_max = max(max(median[init_idx:]), auto_y_max)
 
     auto_x_max = times[-1]

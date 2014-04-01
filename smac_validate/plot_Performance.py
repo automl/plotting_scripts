@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from argparse import ArgumentParser
+import os
 import sys
 import itertools
 
@@ -11,8 +12,8 @@ import numpy as np
 import load_data
 
 
-def plot_optimization_trace(times, performance_list, title, min_test, max_test, name_list,
-                            log=False, save="", y_min=0, y_max=0, x_min=0, x_max=0):
+def plot_optimization_trace(times, performance_list, title, name_list, log=False, save="", y_min=0, y_max=0,
+                            x_min=0, x_max=0):
     markers = 'o'
     colors = itertools.cycle(["#e41a1c",    # Red
                               "#377eb8",    # Blue
@@ -34,48 +35,55 @@ def plot_optimization_trace(times, performance_list, title, min_test, max_test, 
     ax1 = subplot(gs[0:ratio, :])
     ax1.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
 
-    # set initial limits
     auto_y_min = sys.maxint
     auto_y_max = -sys.maxint
-    # Yes this has to be -sys.maxint
     auto_x_min = -sys.maxint
 
     for idx, performance in enumerate(performance_list):
+        color = colors.next()
+        # Get mean and std
         if log:
             performance = np.log10(performance)
-        color = colors.next()
-        # Plot stuff
-        ax1.plot(times, performance, color=color, linewidth=size,
-                 linestyle=linestyles, marker=markers, label=name_list[idx])
-        ax1.fill_between(times, min_test[idx], max_test[idx], facecolor=color, alpha=0.2, edgecolor="")
+
+        median = np.median(performance, axis=0)
+        upper_quartile = np.percentile(performance, q=75, axis=0)
+        lower_quartile = np.percentile(performance, q=25, axis=0)
+        # Plot mean and std
+        ax1.fill_between(times, lower_quartile, upper_quartile,
+                         facecolor=color, alpha=0.3, edgecolor=color)
+        ax1.plot(times, median, color=color, linewidth=size,
+                 linestyle=linestyles, marker=markers, label=name_list[idx] + " (" + str(performance.shape[0]) + ")")
 
         # Get limits
         # For y_min we always take the lowest value
-        auto_y_min = min(min(min_test[idx]), auto_y_min)
+        auto_y_min = min(min(lower_quartile), auto_y_min)
 
         # For y_max we take the highest value after the median starts to change
-        init = performance[0]
+        init = median[0]
         init_idx = 0
-        while init == performance[init_idx]:
+        while init == median[init_idx]:
             # stop when median changes
-            init = performance[init_idx]
+            init = median[init_idx]
             init_idx += 1
         if init_idx != 0:
+            # And we also shift x_min
             auto_x_min = max(times[init_idx], auto_x_min)
-        auto_y_max = max(max(performance[init_idx:]), auto_y_max)
+        auto_y_max = max(max(median[init_idx:]), auto_y_max)
+
     auto_x_max = times[-1]
 
-    # Label axes
+    # Describe axes
     if log:
         ax1.set_ylabel("log10(Performance)")
     else:
         ax1.set_ylabel("Performance")
-
     ax1.set_xlabel("log10(time) [sec]")
 
-    # Set axes limit
-    ax1.set_xscale("log")
+    leg = ax1.legend(loc='best', fancybox=True)
+    leg.get_frame().set_alpha(0.5)
 
+    # Set axes limits
+    ax1.set_xscale("log")
     if y_max == 0 and y_min != 0:
         ax1.set_ylim([y_min, auto_y_max + 0.01*abs(auto_y_max)])
     elif y_max != 0 and y_min == 0:
@@ -94,17 +102,13 @@ def plot_optimization_trace(times, performance_list, title, min_test, max_test, 
     if x_max == 0 and x_min != 0:
         ax1.set_xlim([x_min, auto_x_max + 0.01*abs(auto_x_max-auto_x_min)])
     elif x_max != 0 and x_min == 0:
-        ax1.set_xlim([auto_x_max-0.1*abs(auto_x_min), x_max])
+        ax1.set_xlim([auto_x_min-0.1*abs(auto_x_min), x_max])
     elif x_max > x_min != 0:
         ax1.set_xlim([x_min, x_max])
     else:
-        print "khf"
-        ax1.set_xlim([auto_x_min-0.1*abs(auto_x_min), auto_x_max + 0.1*abs(auto_x_max-auto_x_min)])
+        ax1.set_xlim([auto_x_min-0.1*abs(auto_x_min), auto_x_max + 0.01*abs(auto_x_max-auto_x_min)])
 
-    leg = ax1.legend(loc='best', fancybox=True)
-    leg.get_frame().set_alpha(0.5)
-
-    # Save or show figure
+    # Save or show
     tight_layout()
     subplots_adjust(top=0.85)
     if save != "":
@@ -115,15 +119,9 @@ def plot_optimization_trace(times, performance_list, title, min_test, max_test, 
         show()
 
 
-def get_test_of_best_train(train, test):
-    # get argmin of test performance and return test performance at this idx
-    idx = np.argmin(train, 0)
-    return [test[idx[row], row] for row in range(len(idx))]
-
-
 def main():
-    prog = "python plot_test_of_best_train.py <WhatIsThis> one/or/many/*ClassicValidationResults*.csv"
-    description = "Plot a test error of best training trial"
+    prog = "python plot_performance <WhatIsThis> one/or/many/*ClassicValidationResults*.csv"
+    description = "Plot a median trace with quantiles for multiple experiments"
 
     parser = ArgumentParser(description=description, prog=prog)
 
@@ -144,35 +142,39 @@ def main():
                         default="", help="Optional supertitle for plot")
     parser.add_argument("--maxvalue", dest="maxvalue", type=float,
                         default=sys.maxint, help="Replace all values higher than this?")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--train', dest="train",  default=False, action='store_true')
+    group.add_argument('--test', dest="test", default=True, action='store_true')
 
     args, unknown = parser.parse_known_args()
+
+    sys.stdout.write("\nFound " + str(len(unknown)) + " arguments\n")
 
     if len(unknown) < 2:
         print "To less arguments given"
         print(parser.usage)
         sys.exit(1)
 
-    sys.stdout.write("Found " + str(len(unknown)) + " arguments\n")
-
     # Get files and names
     file_list, name_list = load_data.get_file_and_name_list(unknown, match_file='.csv')
     for idx in range(len(name_list)):
         print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))
-
-    # Get data from csv
-    train_performance = list()
-    test_performance = list()
+ # Get data from csv
+    performance = list()
     time_ = list()
     for name in range(len(name_list)):
         # We have a new experiment
-        train_performance.append(list())
-        test_performance.append(list())
+        performance.append(list())
         for fl in file_list[name]:
             _none, csv_data = load_data.read_csv(fl, has_header=False)
             csv_data = np.array(csv_data)
             # Replace too high values with args.maxint
-            train_performance[-1].append([min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 1]])
-            test_performance[-1].append([min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 2]])
+            if args.train:
+                performance[-1].append([min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 1]])
+            elif args.test:
+                performance[-1].append([min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 2]])
+            else:
+                print "This should not happen"
             time_.append([float(i.strip()) for i in csv_data[:, 0]])
         # Check whether we have the same times for all runs
         if len(time_) == 2:
@@ -180,20 +182,15 @@ def main():
                 time_ = [time_[0], ]
             else:
                 raise NotImplementedError(".csv are not using the same times")
-    name_list = [name_list[i] + " (" + str(len(file_list[i])) + ")" for i in range(len(name_list))]
-    train_performance = [np.array(i) for i in train_performance]
-    test_performance = [np.array(i) for i in test_performance]
+    performance = [np.array(i) for i in performance]
     time_ = np.array(time_).flatten()
 
-    # Now get the test results for the best train performance
-    # All arrays are numExp x numTrials
-    test_of_best_train = list()
-    min_test = list()
-    max_test = list()
-    for i in range(len(train_performance)):
-        test_of_best_train.append(get_test_of_best_train(train_performance[i], test_performance[i]))
-        min_test.append(np.min(test_performance[i], 0))
-        max_test.append(np.max(test_performance[i], 0))
+    if args.train:
+                print "Plot TRAIN performance"
+    elif args.test:
+                print "Plot TEST performance"
+    else:
+        print "Don't know what I'm printing"
 
     save = ""
     if args.save != "":
@@ -201,8 +198,8 @@ def main():
         print "Save to %s" % args.save
     else:
         print "Show"
-    plot_optimization_trace(times=time_, performance_list=test_of_best_train, min_test=min_test, max_test=max_test,
-                            name_list=name_list, title=args.title, log=args.log, save=save, y_min=args.ymin,
+    plot_optimization_trace(times=time_, performance_list=performance, title=args.title,
+                            name_list=name_list, log=args.log, save=save, y_min=args.ymin,
                             y_max=args.ymax, x_min=args.xmin, x_max=args.xmax)
 
 if __name__ == "__main__":

@@ -52,26 +52,30 @@ def plot_optimization_trace(times, performance_list, title, name_list, log=False
         ax1.fill_between(times, lower_quartile, upper_quartile,
                          facecolor=color, alpha=0.3, edgecolor=color)
         ax1.plot(times, median, color=color, linewidth=size,
-                 linestyle=linestyles, marker=markers, label=name_list[idx] + " (" + str(performance.shape[0]) + ")")
+                 linestyle=linestyles, marker=markers, label=name_list[idx])
 
         # Get limits
         # For y_min we always take the lowest value
         auto_y_min = min(min(lower_quartile[x_min:]), auto_y_min)
 
-        # For y_max we take the highest value after the median starts to change
-        init = performance[idx][0]
+        # For y_max we take the highest value after the median/quartile starts to change
+        init_per = median[0]
+        init_up = upper_quartile[0]
+        init_lo = lower_quartile[0]
         init_idx = 0
-        while init == performance[idx][init_idx]:
-            # stop when median changes
-            init = performance[idx][init_idx]
+        while init_per == median[init_idx] and init_up == upper_quartile[init_idx] and \
+                init_lo == lower_quartile[init_idx]:
+            # stop when median/quartile changes
             init_idx += 1
 
-        if init_idx != 0:
-            # median stays th same for > 1 evaluations
+        # Found the first change, but show two more points on the left side
+        init_idx = max(0, init_idx-2)
+        if init_idx >= 0:
+            # median stays the same for > 1 evaluations
             auto_x_min = min(times[init_idx], auto_x_min)
 
         from_ = max(init_idx, x_min)
-        auto_y_max = max(max(median[from_:]), auto_y_max)
+        auto_y_max = max(max(upper_quartile[from_:]), auto_y_max)
     auto_x_max = times[-1]
 
     # Describe axes
@@ -87,22 +91,22 @@ def plot_optimization_trace(times, performance_list, title, name_list, log=False
     # Set axes limits
     ax1.set_xscale("log")
     if y_max is None and y_min is not None:
-        ax1.set_ylim([y_min, auto_y_max + 0.01*abs(auto_y_max)])
+        ax1.set_ylim([y_min, auto_y_max + 0.01*abs(auto_y_max - y_min)])
     elif y_max is not None and y_min is None:
-        ax1.set_ylim([auto_y_min, y_max])
+        ax1.set_ylim([auto_y_min - 0.01*abs(auto_y_max - y_min), y_max])
     elif y_max > y_min and y_max is not None and y_min is not None:
         ax1.set_ylim([y_min, y_max])
     else:
-        ax1.set_ylim([auto_y_min-0.1*abs((auto_y_max-auto_y_min)), auto_y_max+0.1*abs((auto_y_max-auto_y_min))])
+        ax1.set_ylim([auto_y_min - 0.01*abs(auto_y_max - auto_y_min), auto_y_max + 0.01*abs(auto_y_max - auto_y_min)])
 
     if x_max is None and x_min is not None:
-        ax1.set_xlim([x_min-0.1*abs(x_min), auto_x_max + 0.01*abs(auto_x_max-x_min)])
+        ax1.set_xlim([x_min - 0.1*abs(x_min), auto_x_max + 0.1*abs(auto_x_max)])
     elif x_max is not None and x_min is None:
-        ax1.set_xlim([auto_x_min-0.1*abs(auto_x_min), x_max - 0.1*abs(x_max)])
+        ax1.set_xlim([auto_x_min - 0.1*abs(auto_x_min), x_max + 0.1*abs(x_max)])
     elif x_max > x_min and x_max is not None and x_min is not None:
         ax1.set_xlim([x_min, x_max])
     else:
-        ax1.set_xlim([auto_x_min-0.1*abs(auto_x_min), auto_x_max + 0.01*abs(auto_x_max-auto_x_min)])
+        ax1.set_xlim([auto_x_min - 0.1*abs(auto_x_min), auto_x_max + 0.1*abs(auto_x_max)])
 
     # Save or show
     tight_layout()
@@ -138,6 +142,8 @@ def main():
                         default="", help="Optional supertitle for plot")
     parser.add_argument("--maxvalue", dest="maxvalue", type=float,
                         default=sys.maxint, help="Replace all values higher than this?")
+    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
+                        help="print number of runs on plot")
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--train', dest="train",  default=False, action='store_true')
     group.add_argument('--test', dest="test", default=True, action='store_true')
@@ -155,10 +161,15 @@ def main():
     file_list, name_list = load_data.get_file_and_name_list(unknown, match_file='.csv')
     for idx in range(len(name_list)):
         print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))
+
+    if args.verbose:
+        name_list = [name_list[i] + " (" + str(len(file_list[i])) + ")" for i in range(len(name_list))]
+
     # Get data from csv
     performance = list()
     time_ = list()
     show_from = -sys.maxint
+
     for name in range(len(name_list)):
         # We have a new experiment
         performance.append(list())

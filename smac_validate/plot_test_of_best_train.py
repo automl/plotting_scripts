@@ -42,6 +42,8 @@ def plot_optimization_trace(times, performance_list, title, min_test, max_test, 
     for idx, performance in enumerate(performance_list):
         if log:
             performance = np.log10(performance)
+            min_test[idx] = np.log10(min_test[idx])
+            max_test[idx] = np.log10(max_test[idx])
         color = colors.next()
         # Plot stuff
         ax1.plot(times, performance, color=color, linewidth=size,
@@ -52,16 +54,21 @@ def plot_optimization_trace(times, performance_list, title, min_test, max_test, 
         # For y_min we always take the lowest value
         auto_y_min = min(min(min_test[idx]), auto_y_min)
 
-        # For y_max we take the highest value after the median starts to change
-        init = performance[0]
+        # For y_max we take the highest value after the test_on_best_train/test starts to change
+        init_per = performance[0]
+        init_up = max_test[idx][0]
+        init_lo = min_test[idx][0]
         init_idx = 0
-        while init == performance[init_idx]:
-            # stop when median changes
-            init = performance[init_idx]
+        while init_per == performance[init_idx] and init_up == max_test[idx][init_idx] and \
+                init_lo == min_test[idx][init_idx]:
+            # stop when test_on_best_train/test changes
             init_idx += 1
-        if init_idx != 0:
+
+        # Found the first change, but show two more points on the left side
+        init_idx = max(0, init_idx-2)
+        if init_idx >= 0:
             auto_x_min = min(times[init_idx], auto_x_min)
-        auto_y_max = max(max(performance[init_idx:]), auto_y_max)
+        auto_y_max = max(max(max_test[idx][init_idx:]), auto_y_max)
     auto_x_max = times[-1]
 
     # Label axes
@@ -75,22 +82,22 @@ def plot_optimization_trace(times, performance_list, title, min_test, max_test, 
     # Set axes limits
     ax1.set_xscale("log")
     if y_max is None and y_min is not None:
-        ax1.set_ylim([y_min, auto_y_max + 0.01*abs(auto_y_max)])
+        ax1.set_ylim([y_min, auto_y_max + 0.01*abs(auto_y_max - y_min)])
     elif y_max is not None and y_min is None:
-        ax1.set_ylim([auto_y_min, y_max])
+        ax1.set_ylim([auto_y_min - 0.01*abs(y_max - auto_y_min), y_max])
     elif y_max > y_min and y_max is not None and y_min is not None:
         ax1.set_ylim([y_min, y_max])
     else:
-        ax1.set_ylim([auto_y_min-0.1*abs((auto_y_max-auto_y_min)), auto_y_max+0.1*abs((auto_y_max-auto_y_min))])
+        ax1.set_ylim([auto_y_min-0.01*abs((auto_y_max - auto_y_min)), auto_y_max+0.01*abs((auto_y_max - auto_y_min))])
 
     if x_max is None and x_min is not None:
-        ax1.set_xlim([x_min-0.1*abs(x_min), auto_x_max + 0.01*abs(auto_x_max-x_min)])
+        ax1.set_xlim([x_min - 0.1*abs(x_min), auto_x_max + 0.1*abs(auto_x_max)])
     elif x_max is not None and x_min is None:
-        ax1.set_xlim([auto_x_min-0.1*abs(auto_x_min), x_max - 0.1*abs(x_max)])
+        ax1.set_xlim([auto_x_min - 0.1*abs(auto_x_min), x_max - 0.1*abs(x_max)])
     elif x_max > x_min and x_max is not None and x_min is not None:
         ax1.set_xlim([x_min, x_max])
     else:
-        ax1.set_xlim([auto_x_min-0.1*abs(auto_x_min), auto_x_max + 0.01*abs(auto_x_max-auto_x_min)])
+        ax1.set_xlim([auto_x_min - 0.1*abs(auto_x_min), auto_x_max + 0.1*abs(auto_x_max)])
 
     leg = ax1.legend(loc='best', fancybox=True)
     leg.get_frame().set_alpha(0.5)
@@ -135,6 +142,8 @@ def main():
                         default="", help="Optional supertitle for plot")
     parser.add_argument("--maxvalue", dest="maxvalue", type=float,
                         default=sys.maxint, help="Replace all values higher than this?")
+    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
+                        help="print number of runs on plot")
 
     args, unknown = parser.parse_known_args()
 
@@ -149,6 +158,9 @@ def main():
     file_list, name_list = load_data.get_file_and_name_list(unknown, match_file='.csv')
     for idx in range(len(name_list)):
         print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))
+
+    if args.verbose:
+        name_list = [name_list[i] + " (" + str(len(file_list[i])) + ")" for i in range(len(name_list))]
 
     # Get data from csv
     train_performance = list()
@@ -171,7 +183,7 @@ def main():
                     time_ = [time_[0], ]
                 else:
                     raise NotImplementedError(".csv are not using the same times")
-    name_list = [name_list[i] + " (" + str(len(file_list[i])) + ")" for i in range(len(name_list))]
+
     train_performance = [np.array(i) for i in train_performance]
     test_performance = [np.array(i) for i in test_performance]
     time_ = np.array(time_).flatten()

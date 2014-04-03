@@ -12,8 +12,8 @@ import numpy as np
 import load_data
 
 
-def plot_optimization_trace(times, performance_list, title, name_list, log=False, save="", y_min=0, y_max=0,
-                            x_min=0, x_max=0):
+def plot_optimization_trace(times, performance_list, title, name_list, log=False, save="",
+                            y_min=None, y_max=None, x_min=None, x_max=None):
     markers = 'o'
     colors = itertools.cycle(["#e41a1c",    # Red
                               "#377eb8",    # Blue
@@ -56,20 +56,22 @@ def plot_optimization_trace(times, performance_list, title, name_list, log=False
 
         # Get limits
         # For y_min we always take the lowest value
-        auto_y_min = min(min(lower_quartile), auto_y_min)
+        auto_y_min = min(min(lower_quartile[x_min:]), auto_y_min)
 
         # For y_max we take the highest value after the median starts to change
-        init = median[0]
+        init = performance[idx][0]
         init_idx = 0
-        while init == median[init_idx]:
+        while init == performance[idx][init_idx]:
             # stop when median changes
-            init = median[init_idx]
+            init = performance[idx][init_idx]
             init_idx += 1
-        if init_idx != 0:
-            # And we also shift x_min
-            auto_x_min = min(times[init_idx], auto_x_min)
-        auto_y_max = max(max(median[init_idx:]), auto_y_max)
 
+        if init_idx != 0:
+            # median stays th same for > 1 evaluations
+            auto_x_min = min(times[init_idx], auto_x_min)
+
+        from_ = max(init_idx, x_min)
+        auto_y_max = max(max(median[from_:]), auto_y_max)
     auto_x_max = times[-1]
 
     # Describe axes
@@ -84,26 +86,20 @@ def plot_optimization_trace(times, performance_list, title, name_list, log=False
 
     # Set axes limits
     ax1.set_xscale("log")
-    if y_max == 0 and y_min != 0:
+    if y_max is None and y_min is not None:
         ax1.set_ylim([y_min, auto_y_max + 0.01*abs(auto_y_max)])
-    elif y_max != 0 and y_min == 0:
+    elif y_max is not None and y_min is None:
         ax1.set_ylim([auto_y_min, y_max])
-    elif y_max > y_min != 0:
+    elif y_max > y_min and y_max is not None and y_min is not None:
         ax1.set_ylim([y_min, y_max])
     else:
         ax1.set_ylim([auto_y_min-0.1*abs((auto_y_max-auto_y_min)), auto_y_max+0.1*abs((auto_y_max-auto_y_min))])
-    #if y_max == y_min:
-    #    ax1.set_ylim([min_y_val-0.1*abs((max_y_val-min_y_val)), max_y_val+0.1*abs((max_y_val-min_y_val))])
-    #else:
-    #    # User has predefined limits
-    #    ax1.set_ylim([y_min, y_max])
 
-    x_min = min(0, x_min)
-    if x_max == 0 and x_min != 0:
-        ax1.set_xlim([x_min, auto_x_max + 0.01*abs(auto_x_max-auto_x_min)])
-    elif x_max != 0 and x_min == 0:
-        ax1.set_xlim([auto_x_min-0.1*abs(auto_x_min), x_max])
-    elif x_max > x_min != 0:
+    if x_max is None and x_min is not None:
+        ax1.set_xlim([x_min-0.1*abs(x_min), auto_x_max + 0.01*abs(auto_x_max-x_min)])
+    elif x_max is not None and x_min is None:
+        ax1.set_xlim([auto_x_min-0.1*abs(auto_x_min), x_max - 0.1*abs(x_max)])
+    elif x_max > x_min and x_max is not None and x_min is not None:
         ax1.set_xlim([x_min, x_max])
     else:
         ax1.set_xlim([auto_x_min-0.1*abs(auto_x_min), auto_x_max + 0.01*abs(auto_x_max-auto_x_min)])
@@ -129,13 +125,13 @@ def main():
     parser.add_argument("-l", "--log", action="store_true", dest="log",
                         default=False, help="Plot on log scale")
     parser.add_argument("--ymax", dest="ymax", type=float,
-                        default=0, help="Maximum of the y-axis")
+                        default=None, help="Maximum of the y-axis")
     parser.add_argument("--ymin", dest="ymin", type=float,
-                        default=0, help="Minimum of the y-axis")
+                        default=None, help="Minimum of the y-axis")
     parser.add_argument("--xmax", dest="xmax", type=float,
-                        default=0, help="Maximum of the x-axis")
+                        default=None, help="Maximum of the x-axis")
     parser.add_argument("--xmin", dest="xmin", type=float,
-                        default=0, help="Minimum of the x-axis")
+                        default=None, help="Minimum of the x-axis")
     parser.add_argument("-s", "--save", dest="save",
                         default="", help="Where to save plot instead of showing it?")
     parser.add_argument("-t", "--title", dest="title",
@@ -162,6 +158,7 @@ def main():
     # Get data from csv
     performance = list()
     time_ = list()
+    show_from = -sys.maxint
     for name in range(len(name_list)):
         # We have a new experiment
         performance.append(list())
@@ -170,11 +167,14 @@ def main():
             csv_data = np.array(csv_data)
             # Replace too high values with args.maxint
             if args.train:
-                performance[-1].append([min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 1]])
+                data = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 1]]
             elif args.test:
-                performance[-1].append([min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 2]])
+                data = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 2]]
             else:
                 print "This should not happen"
+            # do we have only non maxint data?
+            show_from = max(data.count(args.maxvalue), show_from)
+            performance[-1].append(data)
             time_.append([float(i.strip()) for i in csv_data[:, 0]])
             # Check whether we have the same times for all runs
             if len(time_) == 2:
@@ -183,6 +183,7 @@ def main():
                 else:
                     raise NotImplementedError(".csv are not using the same times")
     performance = [np.array(i) for i in performance]
+    # print time_
     time_ = np.array(time_).flatten()
 
     if args.train:
@@ -191,6 +192,9 @@ def main():
                 print "Plot TEST performance"
     else:
         print "Don't know what I'm printing"
+
+    if args.xmin is None and show_from != 0:
+        args.xmin = show_from
 
     save = ""
     if args.save != "":

@@ -172,12 +172,12 @@ def main():
             train_performance[-1].append([min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 1]])
             test_performance[-1].append([min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 2]])
             time_.append([float(i.strip()) for i in csv_data[:, 0]])
-        # Check whether we have the same times for all runs
-        if len(time_) == 2:
-            if time_[0] == time_[1]:
-                time_ = [time_[0], ]
-            else:
-                raise NotImplementedError(".csv are not using the same times")
+            # Check whether we have the same times for all runs
+            if len(time_) == 2:
+                if time_[0] == time_[1]:
+                    time_ = [time_[0], ]
+                else:
+                    raise NotImplementedError(".csv are not using the same times")
     name_list = [name_list[i] + " (" + str(len(file_list[i])) + ")" for i in range(len(name_list))]
     train_performance = [np.array(i) for i in train_performance]
     test_performance = [np.array(i) for i in test_performance]

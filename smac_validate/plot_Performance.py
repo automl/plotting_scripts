@@ -159,7 +159,7 @@ def main():
     file_list, name_list = load_data.get_file_and_name_list(unknown, match_file='.csv')
     for idx in range(len(name_list)):
         print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))
- # Get data from csv
+    # Get data from csv
     performance = list()
     time_ = list()
     for name in range(len(name_list)):
@@ -176,12 +176,12 @@ def main():
             else:
                 print "This should not happen"
             time_.append([float(i.strip()) for i in csv_data[:, 0]])
-        # Check whether we have the same times for all runs
-        if len(time_) == 2:
-            if time_[0] == time_[1]:
-                time_ = [time_[0], ]
-            else:
-                raise NotImplementedError(".csv are not using the same times")
+            # Check whether we have the same times for all runs
+            if len(time_) == 2:
+                if time_[0] == time_[1]:
+                    time_ = [time_[0], ]
+                else:
+                    raise NotImplementedError(".csv are not using the same times")
     performance = [np.array(i) for i in performance]
     time_ = np.array(time_).flatten()
 

@@ -63,13 +63,15 @@ def plot_optimization_trace(times, performance_list, title, name_list, log=False
         init_up = upper_quartile[0]
         init_lo = lower_quartile[0]
         init_idx = 0
-        while init_per == median[init_idx] and init_up == upper_quartile[init_idx] and \
+        # Find out when median/quartile changes
+        while init_idx < len(median) and init_per == median[init_idx] and \
+                init_up == upper_quartile[init_idx] and \
                 init_lo == lower_quartile[init_idx]:
             # stop when median/quartile changes
             init_idx += 1
 
         # Found the first change, but show two more points on the left side
-        init_idx = max(0, init_idx-2)
+        init_idx = max(0, init_idx-3)
         if init_idx >= 0:
             # median stays the same for > 1 evaluations
             auto_x_min = min(times[init_idx], auto_x_min)

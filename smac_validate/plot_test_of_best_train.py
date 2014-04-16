@@ -59,13 +59,14 @@ def plot_optimization_trace(times, performance_list, title, min_test, max_test, 
         init_up = max_test[idx][0]
         init_lo = min_test[idx][0]
         init_idx = 0
-        while init_per == performance[init_idx] and init_up == max_test[idx][init_idx] and \
-                init_lo == min_test[idx][init_idx]:
+        # Find out when test_on_best_train/test changes
+        while init_idx < len(performance) and init_per == performance[init_idx] and \
+                init_up == max_test[idx][init_idx] and init_lo == min_test[idx][init_idx]:
             # stop when test_on_best_train/test changes
             init_idx += 1
 
         # Found the first change, but show two more points on the left side
-        init_idx = max(0, init_idx-2)
+        init_idx = max(0, init_idx-3)
         if init_idx >= 0:
             auto_x_min = min(times[init_idx], auto_x_min)
         auto_y_max = max(max(max_test[idx][init_idx:]), auto_y_max)

@@ -33,7 +33,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     st_ref = "--"
 
     # # Colors
-    ref_colors = itertools.cycle([#"#e41a1c",    # Red
+    ref_colors = itertools.cycle([ # "#e41a1c",    # Red
                                   "#377eb8",    # Blue
                                   "#4daf4a",    # Green
                                   "#984ea3",    # Purple
@@ -41,11 +41,8 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
                                   "#ffff33",    # Yellow
                                   "#a65628",    # Brown
                                   "#f781bf",    # Pink
-                                  # "#999999",    # Grey
+                                   # "#999999",    # Grey
     ])
-
-    # linestyles = '-'
-    size = 1
 
     # Set up figure
     ratio = 1
@@ -73,7 +70,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
         for f in linefactors:
             c = ref_colors.next()
             # Lower reference lines
-            ax1.plot([f*out_lo, out_up], [out_lo, (1.0/f)*out_up], c=c, linestyle=st_ref, label="%d" %f)
+            ax1.plot([f*out_lo, out_up], [out_lo, (1.0/f)*out_up], c=c, linestyle=st_ref, label="%d" % f)
             # Upper reference lines
             ax1.plot([out_lo, (1.0/f)*out_up], [f*out_lo, out_up], c=c, linestyle=st_ref)
 
@@ -84,10 +81,10 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     timeout_both = list()
     rest_idx = list()
     for idx_x, x in enumerate(x_data):
-        if x > max_val and y_data[idx_x] < max_val:
+        if x > max_val > y_data[idx_x]:
             # timeout of x algo
             timeout_x.append(idx_x)
-        elif y_data[idx_x] > max_val and x < max_val:
+        elif y_data[idx_x] > max_val > x:
             # timeout of y algo
             timeout_y.append(idx_x)
         elif y_data[idx_x] > max_val and x > max_val:
@@ -148,8 +145,8 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
         if new_ticks_label[l_idx] >= 1:
             new_ticks_label[l_idx] = int(new_ticks_label[l_idx])
     new_ticks_label.append("timeout")
-    ax1.set_xticklabels(new_ticks_label) #, rotation=45)
-    ax1.set_yticklabels(new_ticks_label) #, rotation=45)
+    ax1.set_xticklabels(new_ticks_label)  # , rotation=45)
+    ax1.set_yticklabels(new_ticks_label)  # , rotation=45)
 
     if debug:
         # Plot legend
@@ -157,13 +154,11 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
         leg.get_frame().set_alpha(0.5)
 
     # Remove top and right line
-    spines_to_remove = ['top', 'right']
-    for spine in spines_to_remove:
-        ax1.spines[spine].set_visible(False)
-    ax1.get_xaxis().tick_bottom()
-    ax1.get_yaxis().tick_left()
-    # fig.axis["right"].set_visible(False)
-    # fig.axis["top"].set_visible(False)
+    # spines_to_remove = ['top', 'right']
+    # for spine in spines_to_remove:
+    #     ax1.spines[spine].set_visible(False)
+    # ax1.get_xaxis().tick_bottom()
+    # ax1.get_yaxis().tick_left()
 
     # Save or show figure
     tight_layout()

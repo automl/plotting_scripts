@@ -3,7 +3,8 @@
 import csv
 import os
 
-def read_csv(fn, has_header=True):
+
+def read_csv(fn, has_header=True, data_type=str):
     data = list()
     header = None
     with open(fn, 'rb') as csvfile:
@@ -12,7 +13,7 @@ def read_csv(fn, has_header=True):
             if header is None and has_header:
                 header = row
                 continue
-            data.append([i.strip() for i in row])
+            data.append(map(data_type, [i.strip() for i in row]))
     return header, data
 
 

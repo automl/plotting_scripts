@@ -25,7 +25,9 @@ import load_data
 
 def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
                       min_val=None, max_val=1000, grey_factor=1, linefactors=None):
-    marker = 'x'
+    regular_marker = '+'
+    timeout_marker = '+'
+    grey_marker = 'x'
     c_angle_bisector = "#e41a1c" # Red
     c_good_points = "#999999"    # Grey
     c_other_points = "k"
@@ -70,9 +72,13 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
         for f in linefactors:
             c = ref_colors.next()
             # Lower reference lines
-            ax1.plot([f*out_lo, out_up], [out_lo, (1.0/f)*out_up], c=c, linestyle=st_ref, label="%d" % f)
+            ax1.plot([f*out_lo, out_up], [out_lo, (1.0/f)*out_up], c=c, linestyle=st_ref)
             # Upper reference lines
             ax1.plot([out_lo, (1.0/f)*out_up], [f*out_lo, out_up], c=c, linestyle=st_ref)
+            if debug:
+                ax1.text((1.0/f)*out_up, out_up, "%2.1fx" % f, color=c, fontsize=10)
+                ax1.text(out_up, (1.0/f)*out_up, "%2.1fx" % f, color=c, fontsize=10)
+
 
     # Scatter
     grey_idx = list()
@@ -95,14 +101,16 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
         else:
             rest_idx.append(idx_x)
 
-    ax1.scatter(x_data[grey_idx], y_data[grey_idx], marker=marker, c=c_good_points)
-    ax1.scatter(x_data[rest_idx], y_data[rest_idx], marker=marker, c=c_other_points)
+    # Regular points
+    ax1.scatter(x_data[grey_idx], y_data[grey_idx], marker=grey_marker, c=c_good_points)
+    ax1.scatter(x_data[rest_idx], y_data[rest_idx], marker=regular_marker, c=c_other_points)
 
-    # Timeout point
+    # Timeout points
     timeout_val = 10**int(np.log10(10*max_val))
-    ax1.scatter([timeout_val]*len(timeout_x), y_data[timeout_x], marker=marker, c=c_other_points)
-    ax1.scatter([timeout_val]*len(timeout_both), [timeout_val]*len(timeout_both), marker=marker, c=c_other_points)
-    ax1.scatter(x_data[timeout_y], [timeout_val]*len(timeout_y), marker=marker, c=c_other_points)
+    ax1.scatter([timeout_val]*len(timeout_x), y_data[timeout_x], marker=timeout_marker, c=c_other_points)
+    ax1.scatter([timeout_val]*len(timeout_both), [timeout_val]*len(timeout_both), marker=timeout_marker, c=c_other_points)
+    ax1.scatter(x_data[timeout_y], [timeout_val]*len(timeout_y), marker=timeout_marker, c=c_other_points)
+    # Timeout line
     ax1.plot([timeout_val, timeout_val], [auto_min_val, timeout_val], c=c_other_points, linestyle=":")
     ax1.plot([auto_min_val, timeout_val], [timeout_val, timeout_val], c=c_other_points, linestyle=":")
 
@@ -188,13 +196,11 @@ def main():
                         default="", help="Where to save plot instead of showing it?")
     parser.add_argument("-t", "--title", dest="title",
                         default="", help="Optional supertitle for plot")
-    parser.add_argument("--maxvalue", dest="maxvalue", type=float,
-                        default=sys.maxint, help="Replace all values higher than this?")
     parser.add_argument("--greyFactor", dest="grey_factor", type=float,
                         default=1, help="If an algorithms is not greyFactor-times better"
                                         " than the other, show this point less salient, > 1")
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
-                        help="print number of runs on plot")
+                        help="Plot some debug info")
     parser.add_argument("-f", "--lineFactors", dest="linefactors",
                         default=None, help="Plot X speedup/slowdown, format 'X,..,X' (no spaces)")
 
@@ -218,7 +224,7 @@ def main():
         if min(linefactors) < 1:
             print "A line-factor lower than one makes no sense"
             sys.exit(1)
-    if args.grey_factor > 1:
+    if args.grey_factor > 1 and args.grey_factor not in linefactors:
         linefactors.append(args.grey_factor)
 
     header, data = load_data.read_csv(unknown[0], has_header=True, data_type=float)

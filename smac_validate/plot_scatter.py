@@ -10,18 +10,6 @@ import numpy as np
 
 import load_data
 
-"""
-
-- Fix: quadratische Plots und die x Achsenbeschriftung nicht abschneiden
-- x und y label aus dem File nehmen
-- der Faktor "greyFactor" zum Ausgrauen von Punkten (hier: 2) sollte ein Parameter sein (per Default 1, d.h. nicht aktiv)
-- die 10x und 50x Speedup/Slow-down Linien sollten auch parametrisiert sein; hier waere eine Liste von Faktoren (z.B. "lineFactors") gut. per Default leer; wenn greyFactor > 1 sollte das automatisch auch ein lineFactor sein.
-- Werte ueber einem gewissen Wert maxValue (im Papier: 1800) sollten als ein anderer gewisser Wert timeoutValue (im Papier: 10000) geplottet werden, und statt wie im Papier mit timeoutValue am besten mit dem String "timeout" beschriftet werden (maxValue und timeoutValue sollten beides Parameter sein)
-- bei maxValue sollten noch gepunktete horizontale und vertikale Linien sein, und die 10x / 50x Speedup/slowdown Linien sollten nicht ueber maxValue hinaus gehen (weder in x noch in y Richtung).
-- Der Plot sollte typischerweise bei 0.005 anfangen, aber am besten waere das auch ein Parameter.
-
-"""
-
 
 def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
                       min_val=None, max_val=1000, grey_factor=1, linefactors=None):
@@ -59,7 +47,6 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
         auto_min_val = min([min(x_data), min(y_data), min_val])
     else:
         auto_min_val = min([min(x_data), min(y_data)])
-    print auto_min_val
     auto_max_val = max_val
 
     # Plot angle bisector and reference_lines
@@ -134,12 +121,10 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
         ax1.set_xlim(ax1.get_ylim())
     elif max_val > min_val and max_val is not None and min_val is not None:
         # User sets both, min and max -val
-        print "User defined"
         ax1.set_ylim([min_val, 10*max_val])
         ax1.set_xlim(ax1.get_ylim())
     else:
         # User sets nothing
-        print "Auto", auto_min_val, auto_max_val
         ax1.set_xlim([auto_min_val, 10*max_val])
         ax1.set_ylim(ax1.get_xlim())
 
@@ -181,7 +166,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
 
 def main():
     prog = "python plot_scatter.py any.csv"
-    description = "creates a scatter plot"
+    description = "Plots performances of the best config at one time vs another in a scatter plot"
 
     parser = ArgumentParser(description=description, prog=prog)
 
@@ -194,7 +179,7 @@ def main():
                         default=None, help="Minimum of both axes")
     parser.add_argument("-s", "--save", dest="save",
                         default="", help="Where to save plot instead of showing it?")
-    parser.add_argument("-t", "--title", dest="title",
+    parser.add_argument("--title", dest="title",
                         default="", help="Optional supertitle for plot")
     parser.add_argument("--greyFactor", dest="grey_factor", type=float,
                         default=1, help="If an algorithms is not greyFactor-times better"
@@ -203,17 +188,71 @@ def main():
                         help="Plot some debug info")
     parser.add_argument("-f", "--lineFactors", dest="linefactors",
                         default=None, help="Plot X speedup/slowdown, format 'X,..,X' (no spaces)")
+    parser.add_argument("--time", dest="time", default=None,
+                        help="Plot config at which time?, format 'time1,time2' ")
+    parser.add_argument("--obj", dest="obj", default=None,
+                        help="Path to validationObjectiveMatrix-traj-run-* file")
+    parser.add_argument("--res", dest="res", required=True,
+                        help="Path to validationResults-traj-run-* file")
 
     args, unknown = parser.parse_known_args()
 
-    if len(unknown) != 1:
+    if len(unknown) != 0:
         print "Wrong number of arguments"
-        print(parser.usage)
+        parser.print_help()
         sys.exit(1)
 
     if args.grey_factor < 1:
         print "A grey-factor lower than one makes no sense"
+        parser.print_help()
         sys.exit(1)
+
+    # Load validationResults
+    res_header, res_data = load_data.read_csv(args.res, has_header=True)
+    av_times = [int(float(row[0])) for row in res_data if row[len(res_header)-2] != '"1"']
+    if args.time == None:
+        # Print available times and quit
+        print "Choose a time from"
+        print "\n".join(["* %s" % i for i in av_times])
+        sys.exit(0)
+    time_arr = args.time.split(",")
+    if len(time_arr) != 2:
+        print "Something wrong with %s, should be 'a,b'" % args.time
+    time_1 = float(time_arr[0])
+    time_2 = float(time_arr[1])
+    #print time_1
+    #print time_2
+    #print res_data
+    #print res_data
+
+    if args.obj == None:
+        print "Missing --obj"
+        parser.print_help()
+        sys.exit(1)
+
+    # Now extract data
+    config_1 = [int(float(row[len(res_header)-2].strip('"'))) for row in res_data if float(row[0]) == time_1]
+    config_2 = [int(float(row[len(res_header)-2].strip('"'))) for row in res_data if float(row[0]) == time_2]
+    if len(config_1) != 1 or len(config_2) != 1:
+        print "Time %s or %s not found. Choose a time from:" % (time_1, time_2)
+        print "\n".join(["* %s" % i for i in av_times])
+        sys.exit(1)
+    config_1 = config_1[0]
+    config_2 = config_2[0]
+
+
+    obj_header, obj_data = load_data.read_csv(args.obj, has_header=True)
+    head_template = '"Objective of validation config #%s"'
+    idx_1 = obj_header.index(head_template % config_1)
+    idx_2 = obj_header.index(head_template % config_2)
+    #print idx_1, idx_2
+
+    data_one = np.array([float(row[idx_1].strip('"')) for row in obj_data])
+    data_two = np.array([float(row[idx_2].strip('"')) for row in obj_data])
+    #print data_one
+    #print data_two
+
+    print "Found %s points for config %d and %s points for config %d" % (str(data_one.shape), config_1, str(data_two.shape), config_2)
 
     linefactors = list()
     if args.linefactors is not None:
@@ -227,20 +266,13 @@ def main():
     if args.grey_factor > 1 and args.grey_factor not in linefactors:
         linefactors.append(args.grey_factor)
 
-    header, data = load_data.read_csv(unknown[0], has_header=True, data_type=float)
-    data = np.array(data)
-    data_one = data[:, 0]
-    data_two = data[:, 1]
-
-    print "Found [%d, %d] data points" % (data.shape[0], data.shape[1])
-
     save = ""
     if args.save != "":
         save = args.save
         print "Save to %s" % args.save
     else:
         print "Show"
-    plot_scatter_plot(x_data=data_one, y_data=data_two, labels=header, title=args.title, save=save,
+    plot_scatter_plot(x_data=data_one, y_data=data_two, labels=[head_template % config_1, head_template % config_2], title=args.title, save=save,
                       max_val=args.max, min_val=args.min, grey_factor=args.grey_factor,
                       linefactors=linefactors, debug=args.verbose)
 

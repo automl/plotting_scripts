@@ -150,7 +150,7 @@ def main():
 
     if len(unknown) < 2:
         print "To less arguments given"
-        print(parser.usage)
+        parser.print_help()
         sys.exit(1)
 
     sys.stdout.write("Found " + str(len(unknown)) + " arguments\n")

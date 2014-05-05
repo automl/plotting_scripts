@@ -172,7 +172,7 @@ def main():
         train_performance.append(list())
         test_performance.append(list())
         for fl in file_list[name]:
-            _none, csv_data = load_data.read_csv(fl, has_header=False)
+            _none, csv_data = load_data.read_csv(fl, has_header=True)
             csv_data = np.array(csv_data)
             # Replace too high values with args.maxint
             train_performance[-1].append([min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 1]])

@@ -176,7 +176,7 @@ def main():
         # We have a new experiment
         performance.append(list())
         for fl in file_list[name]:
-            _none, csv_data = load_data.read_csv(fl, has_header=False)
+            _none, csv_data = load_data.read_csv(fl, has_header=True)
             csv_data = np.array(csv_data)
             # Replace too high values with args.maxint
             if args.train:

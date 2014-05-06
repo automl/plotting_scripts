@@ -237,9 +237,6 @@ def main():
         sys.exit(1)
 
     # Now extract data
-    times = [row[0] for row in res_data]
-    print times
-    
     config_1 = [int(float(row[len(res_header)-2].strip('"'))) for row in res_data if int(float(row[0])) == int(time_1)]
     config_2 = [int(float(row[len(res_header)-2].strip('"'))) for row in res_data if int(float(row[0])) == int(time_2)]
     if len(config_1) == 0 or len(config_2) == 0:
@@ -272,11 +269,18 @@ def main():
         linefactors.append(args.grey_factor)
 
     label_template = 'Objective of validation config #%s, best at %s sec'
-    if time_1 == int(time_1):
-        time_1 == int(time_1)
-        
-    if time_2 == int(time_2):
-        time_2 == int(time_2)
+    
+    # This might produce overhead for large .csv files
+    times = [int(float(row[0])) for row in res_data]
+    time_1 = res_data[times.index(int(time_1))][0]
+    time_2 = res_data[times.index(int(time_2))][0]
+
+    
+    #if time_1 == int(time_1):
+    #    time_1 == int(time_1)
+    #    
+    #if time_2 == int(time_2):
+    #    time_2 == int(time_2)
 
     save = ""
     if args.save != "":

@@ -14,25 +14,25 @@ import load_data
 def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
                       min_val=None, max_val=1000, grey_factor=1, linefactors=None):
     regular_marker = '+'
-    timeout_marker = '+'
+    timeout_marker = '.'
     grey_marker = 'x'
-    c_angle_bisector = "#e41a1c" # Red
-    c_good_points = "#999999"    # Grey
+    c_angle_bisector = "#e41a1c"  # Red
+    c_good_points = "#999999"     # Grey
     c_other_points = "k"
 
     st_ref = "--"
 
-    # # Colors
-    ref_colors = itertools.cycle([ # "#e41a1c",    # Red
-                                  "#377eb8",    # Blue
-                                  "#4daf4a",    # Green
-                                  "#984ea3",    # Purple
-                                  "#ff7f00",    # Orange
-                                  "#ffff33",    # Yellow
-                                  "#a65628",    # Brown
-                                  "#f781bf",    # Pink
-                                   # "#999999",    # Grey
-    ])
+    # Colors
+    ref_colors = itertools.cycle([  # "#e41a1c",    # Red
+                                 "#377eb8",    # Blue
+                                 "#4daf4a",    # Green
+                                 "#984ea3",    # Purple
+                                 "#ff7f00",    # Orange
+                                 "#ffff33",    # Yellow
+                                 "#a65628",    # Brown
+                                 "#f781bf",    # Pink
+                                 # "#999999",    # Grey
+                                 ])
 
     # Set up figure
     ratio = 1
@@ -62,9 +62,14 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
             ax1.plot([f*out_lo, out_up], [out_lo, (1.0/f)*out_up], c=c, linestyle=st_ref)
             # Upper reference lines
             ax1.plot([out_lo, (1.0/f)*out_up], [f*out_lo, out_up], c=c, linestyle=st_ref)
-            if debug:
-                ax1.text((1.0/f)*out_up, out_up, "%2.1fx" % f, color=c, fontsize=10)
-                ax1.text(out_up, (1.0/f)*out_up, "%2.1fx" % f, color=c, fontsize=10)
+
+            offset = 1.1
+            if int(f) == f:
+                lf_str = "%dx" % f
+            else:
+                lf_str = "%2.1fx" % f
+            ax1.text((1.0/f)*out_up, out_up*offset, lf_str, color=c, fontsize=10)
+            ax1.text(out_up*offset, (1.0/f)*out_up, lf_str, color=c, fontsize=10)
 
 
     # Scatter
@@ -93,7 +98,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     ax1.scatter(x_data[rest_idx], y_data[rest_idx], marker=regular_marker, c=c_other_points)
 
     # Timeout points
-    timeout_val = 10**int(np.log10(10*max_val))
+    timeout_val = max_val # int(np.log10(10*max_val))
     ax1.scatter([timeout_val]*len(timeout_x), y_data[timeout_x], marker=timeout_marker, c=c_other_points)
     ax1.scatter([timeout_val]*len(timeout_both), [timeout_val]*len(timeout_both), marker=timeout_marker, c=c_other_points)
     ax1.scatter(x_data[timeout_y], [timeout_val]*len(timeout_y), marker=timeout_marker, c=c_other_points)
@@ -109,32 +114,34 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     ax1.set_xscale("log")
     ax1.set_yscale("log")
 
-    max_val *= 1.5
+    max_val *= 2
     auto_min_val *= 0.9
     if max_val is None and min_val is not None:
         # User sets min_val
-        ax1.set_ylim([min_val, 10*max_val])
+        ax1.set_ylim([min_val, max_val])
         ax1.set_xlim(ax1.get_ylim())
     elif max_val is not None and min_val is None:
         # User sets max val
-        ax1.set_ylim([auto_min_val, 10*max_val])
+        ax1.set_ylim([auto_min_val, max_val])
         ax1.set_xlim(ax1.get_ylim())
     elif max_val > min_val and max_val is not None and min_val is not None:
         # User sets both, min and max -val
-        ax1.set_ylim([min_val, 10*max_val])
+        ax1.set_ylim([min_val, max_val])
         ax1.set_xlim(ax1.get_ylim())
     else:
         # User sets nothing
-        ax1.set_xlim([auto_min_val, 10*max_val])
+        ax1.set_xlim([auto_min_val, max_val])
         ax1.set_ylim(ax1.get_xlim())
 
     # Set axes labels
     ax1.set_xlabel(labels[0])
     ax1.set_ylabel(labels[1])
 
-    new_ticks_x = ax1.get_xticks()[:-2]
+    new_ticks_x = ax1.get_xticks()
+    new_ticks_x = new_ticks_x[:-2]
     new_ticks_label = list(new_ticks_x)
     for l_idx in range(len(new_ticks_label)):
+        # change 1x10^2 to 100
         if new_ticks_label[l_idx] >= 1:
             new_ticks_label[l_idx] = int(new_ticks_label[l_idx])
     new_ticks_label.append("timeout")
@@ -209,21 +216,20 @@ def main():
 
     # Load validationResults
     res_header, res_data = load_data.read_csv(args.res, has_header=True)
-    av_times = [int(float(row[0])) for row in res_data if row[len(res_header)-2] != '"1"']
+    av_times = [float(row[0]) for row in res_data]
     if args.time == None:
         # Print available times and quit
         print "Choose a time from"
         print "\n".join(["* %s" % i for i in av_times])
         sys.exit(0)
     time_arr = args.time.split(",")
-    if len(time_arr) != 2:
+    if len(time_arr) != 2 or (len(time_arr) == 2 and (time_arr[1] == "" or time_arr[0] == "")):
         print "Something wrong with %s, should be 'a,b'" % args.time
+        print "Choose a time from"
+        print "\n".join(["* %s" % i for i in av_times])
+        sys.exit(0)
     time_1 = float(time_arr[0])
     time_2 = float(time_arr[1])
-    #print time_1
-    #print time_2
-    #print res_data
-    #print res_data
 
     if args.obj == None:
         print "Missing --obj"
@@ -231,26 +237,25 @@ def main():
         sys.exit(1)
 
     # Now extract data
-    config_1 = [int(float(row[len(res_header)-2].strip('"'))) for row in res_data if float(row[0]) == time_1]
-    config_2 = [int(float(row[len(res_header)-2].strip('"'))) for row in res_data if float(row[0]) == time_2]
-    if len(config_1) != 1 or len(config_2) != 1:
-        print "Time %s or %s not found. Choose a time from:" % (time_1, time_2)
+    times = [row[0] for row in res_data]
+    print times
+    
+    config_1 = [int(float(row[len(res_header)-2].strip('"'))) for row in res_data if int(float(row[0])) == int(time_1)]
+    config_2 = [int(float(row[len(res_header)-2].strip('"'))) for row in res_data if int(float(row[0])) == int(time_2)]
+    if len(config_1) == 0 or len(config_2) == 0:
+        print "Time int(%s) or int(%s) not found. Choose a time from:" % (time_1, time_2)
         print "\n".join(["* %s" % i for i in av_times])
         sys.exit(1)
     config_1 = config_1[0]
     config_2 = config_2[0]
 
-
     obj_header, obj_data = load_data.read_csv(args.obj, has_header=True)
     head_template = '"Objective of validation config #%s"'
     idx_1 = obj_header.index(head_template % config_1)
     idx_2 = obj_header.index(head_template % config_2)
-    #print idx_1, idx_2
 
     data_one = np.array([float(row[idx_1].strip('"')) for row in obj_data])
     data_two = np.array([float(row[idx_2].strip('"')) for row in obj_data])
-    #print data_one
-    #print data_two
 
     print "Found %s points for config %d and %s points for config %d" % (str(data_one.shape), config_1, str(data_two.shape), config_2)
 
@@ -266,13 +271,20 @@ def main():
     if args.grey_factor > 1 and args.grey_factor not in linefactors:
         linefactors.append(args.grey_factor)
 
+    label_template = 'Objective of validation config #%s, best at %s sec'
+    if time_1 == int(time_1):
+        time_1 == int(time_1)
+        
+    if time_2 == int(time_2):
+        time_2 == int(time_2)
+
     save = ""
     if args.save != "":
         save = args.save
         print "Save to %s" % args.save
     else:
         print "Show"
-    plot_scatter_plot(x_data=data_one, y_data=data_two, labels=[head_template % config_1, head_template % config_2], title=args.title, save=save,
+    plot_scatter_plot(x_data=data_one, y_data=data_two, labels=[label_template % (config_1, str(time_1)), label_template % (config_2, str(time_2))], title=args.title, save=save,
                       max_val=args.max, min_val=args.min, grey_factor=args.grey_factor,
                       linefactors=linefactors, debug=args.verbose)
 

@@ -79,10 +79,10 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     timeout_both = list()
     rest_idx = list()
     for idx_x, x in enumerate(x_data):
-        if x > max_val > y_data[idx_x]:
+        if x => max_val > y_data[idx_x]:
             # timeout of x algo
             timeout_x.append(idx_x)
-        elif y_data[idx_x] > max_val > x:
+        elif y_data[idx_x] => max_val > x:
             # timeout of y algo
             timeout_y.append(idx_x)
         elif y_data[idx_x] > max_val and x > max_val:
@@ -114,25 +114,6 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     ax1.set_xscale("log")
     ax1.set_yscale("log")
 
-    max_val *= 2
-    auto_min_val *= 0.9
-    if max_val is None and min_val is not None:
-        # User sets min_val
-        ax1.set_ylim([min_val, max_val])
-        ax1.set_xlim(ax1.get_ylim())
-    elif max_val is not None and min_val is None:
-        # User sets max val
-        ax1.set_ylim([auto_min_val, max_val])
-        ax1.set_xlim(ax1.get_ylim())
-    elif max_val > min_val and max_val is not None and min_val is not None:
-        # User sets both, min and max -val
-        ax1.set_ylim([min_val, max_val])
-        ax1.set_xlim(ax1.get_ylim())
-    else:
-        # User sets nothing
-        ax1.set_xlim([auto_min_val, max_val])
-        ax1.set_ylim(ax1.get_xlim())
-
     # Set axes labels
     ax1.set_xlabel(labels[0])
     ax1.set_ylabel(labels[1])
@@ -163,6 +144,30 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     # Save or show figure
     tight_layout()
     subplots_adjust(top=0.85)
+    
+    max_val *= 2
+    auto_min_val *= 0.9
+    ax1.set_autoscale_on(False)
+    #===========================================================================
+    # if max_val is None and min_val is not None:
+    #     # User sets min_val
+    #     ax1.set_ylim([min_val, max_val])
+    #     ax1.set_xlim(ax1.get_ylim())
+    #===========================================================================
+    elif max_val is not None and min_val is None:
+        # User sets max val
+        ax1.set_ylim([auto_min_val, max_val])
+        ax1.set_xlim(ax1.get_ylim())
+    elif max_val > min_val and max_val is not None and min_val is not None:
+        # User sets both, min and max -val
+        ax1.set_ylim([min_val, max_val])
+        ax1.set_xlim(ax1.get_ylim())
+    else:
+        # User sets nothing
+        ax1.set_xlim([auto_min_val, max_val])
+        ax1.set_ylim(ax1.get_xlim())
+
+    
     if save != "":
         savefig(save, dpi=100, facecolor='w', edgecolor='w',
                 orientation='portrait', papertype=None, format=None,

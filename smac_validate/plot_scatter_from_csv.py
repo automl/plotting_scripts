@@ -40,6 +40,10 @@ def main():
     parser.add_argument("-c", "--columns", dest="columns", default='1,2',
                         help="Use these columns from csv; starting at 1, format"
                              " 'xaxis,yaxis' (nospaces)")
+    parser.add_argument("--size", dest="user_fontsize", default=12, type=int,
+                        help="Standard fontsize")
+    parser.add_argument("--dpi", dest="dpi", default=100, type=int,
+                        help="DPI for saved figure")
 
     args, unknown = parser.parse_known_args()
 

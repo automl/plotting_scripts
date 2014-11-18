@@ -4,7 +4,8 @@ from argparse import ArgumentParser
 import sys
 import itertools
 
-from matplotlib.pyplot import tight_layout, figure, subplots_adjust, subplot, savefig, show
+from matplotlib.pyplot import tight_layout, figure, subplots_adjust,\
+    subplot, savefig, show, setp
 import matplotlib.gridspec
 import numpy as np
 from matplotlib.ticker import FormatStrFormatter
@@ -13,7 +14,8 @@ import load_data
 
 
 def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
-                      min_val=None, max_val=1000, grey_factor=1, linefactors=None):
+                      min_val=None, max_val=1000, grey_factor=1, linefactors=None,
+                      user_fontsize=20, dpi=100):
     regular_marker = 'x'
     timeout_marker = '+'
     grey_marker = '.'
@@ -22,6 +24,10 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     c_other_points = "k"
     size = 1
     st_ref = "--"
+
+    ticklabel_size = user_fontsize
+    linefactor_size = user_fontsize - 2
+    label_size = user_fontsize + 1
 
     #------
     # maximum_value: location for timeout points
@@ -76,11 +82,13 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
                      linestyle=st_ref, linewidth=size*1.5)
             offset = 1.1
             if int(f) == f:
-                lf_str = "%dx" % f
+                lf_str = r"$%d\times$" % f
             else:
-                lf_str = "%2.1fx" % f
-            ax1.text((1.0/f)*out_up, out_up*offset, lf_str, color=c, fontsize=10)
-            ax1.text(out_up*offset, (1.0/f)*out_up, lf_str, color=c, fontsize=10)
+                lf_str = r"$%2.1f\times$" % f
+            ax1.text((1.0/f)*out_up, out_up*offset, lf_str, color=c,
+                     fontsize=linefactor_size)
+            ax1.text(out_up*offset, (1.0/f)*out_up, lf_str, color=c,
+                     fontsize=linefactor_size)
 
 
     #######
@@ -134,15 +142,16 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
 
     if debug:
         # debug option
-        ax1.scatter(x_data, y_data, marker="o", facecolor="", s=50, label="original data")
+        ax1.scatter(x_data, y_data, marker="o", facecolor="", s=50,
+                    label="original data")
 
     # Set axes scale and limits
     ax1.set_xscale("log")
     ax1.set_yscale("log")
 
     # Set axes labels
-    ax1.set_xlabel(labels[0])
-    ax1.set_ylabel(labels[1])
+    ax1.set_xlabel(labels[0], fontsize=label_size)
+    ax1.set_ylabel(labels[1], fontsize=label_size)
 
     if debug:
         # Plot legend
@@ -172,28 +181,32 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     # Plot maximum value as tick
     if int(maximum_value) == maximum_value:
         maximum_value = int(maximum_value)
+        maximum_str = r"$%d$" % maximum_value
+    else:
+        maximum_str = r"$%5.2f$" % maximum_value
+
     if int(np.log10(maximum_value)) != np.log10(maximum_value):
         # If we do not already have this ticklabel as a regular label
         ax1.text(ax1.get_ylim()[0] - 0.1 * np.abs(ax1.get_ylim()[0]),
                  maximum_value,
-                 str(maximum_value) + " ",
+                 maximum_str,
                  horizontalalignment='right', verticalalignment="center",
-                 fontsize=12)
+                 fontsize=user_fontsize)
         ax1.text(maximum_value,
                  ax1.get_ylim()[0] - 0.1 * np.abs(ax1.get_ylim()[0]),
-                 str(maximum_value) + " ",
+                 maximum_str,
                  horizontalalignment='center', verticalalignment="top",
-                 fontsize=12)
+                 fontsize=user_fontsize)
 
     # Plot 'timeout'
     ax1.text(ax1.get_xlim()[0] - 0.1 * np.abs(ax1.get_ylim()[0]),
              timeout_val,
              "timeout ", horizontalalignment='right',
-             verticalalignment="center", fontsize=12)
+             verticalalignment="center", fontsize=user_fontsize)
     ax1.text(timeout_val,
              ax1.get_ylim()[0] - 0.1 * np.abs(ax1.get_ylim()[0]),
-             "timeout ",  horizontalalignment='center', verticalalignment="top",
-             fontsize=12, rotation=45)
+             "timeout ",  horizontalalignment='right', verticalalignment="top",
+             fontsize=user_fontsize, rotation=45)
 
     #########
     # Adjust ticks > max_val
@@ -227,19 +240,23 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     new_ticks_label = list()
     for l_idx in range(len(ticks_y)):
         if ticks_x[l_idx] < maximum_value:
-            new_ticks_label.append(ticks_y[l_idx])
+            if 0 < ticks_x[l_idx] < 1:
+                new_ticks_label.append(str(r"$10^{%d}$" % int(np.log10(ticks_x[l_idx]))))
+            if 1 <= ticks_x[l_idx] < 1000:
+                new_ticks_label.append(str(r"$%d^{ }$" % int(ticks_x[l_idx])))
+            if 1000 <= ticks_x[l_idx]:
+                new_ticks_label.append(str(r"$10^{%d}$" % int(np.log10(ticks_x[l_idx]))))
     ax1.set_yticklabels(new_ticks_label)  # , rotation=45)
+    ax1.set_xticklabels(new_ticks_label)
 
-    # Change tick labels from 10^-1 to 0.1
-    print ax1.get_xticks()[0] >= 0.001
-    if 1000 > max_val > 10 and ax1.get_xticks()[0] >= 0.01:
-        ax1.xaxis.set_major_formatter(FormatStrFormatter('%d'))
-        ax1.yaxis.set_major_formatter(FormatStrFormatter('%d'))
-
+    # Change fontsize for ticklabels
+    setp(ax1.get_yticklabels(), fontsize=ticklabel_size)
+    setp(ax1.get_xticklabels(), fontsize=ticklabel_size)
+    tight_layout()
     if save != "":
-        savefig(save, dpi=100, facecolor='w', edgecolor='w',
+        savefig(save, dpi=dpi, facecolor='w', edgecolor='w',
                 orientation='portrait', papertype=None, format=None,
-                transparent=False, pad_inches=0.1)
+                transparent=False, pad_inches=0.02, bbox_inches='tight')
     else:
         show()
 
@@ -347,13 +364,6 @@ def main():
     times = [int(float(row[0])) for row in res_data]
     time_1 = res_data[times.index(int(time_1))][0]
     time_2 = res_data[times.index(int(time_2))][0]
-
-    
-    #if time_1 == int(time_1):
-    #    time_1 == int(time_1)
-    #    
-    #if time_2 == int(time_2):
-    #    time_2 == int(time_2)
 
     save = ""
     if args.save != "":

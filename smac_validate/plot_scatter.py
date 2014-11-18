@@ -79,10 +79,10 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     timeout_both = list()
     rest_idx = list()
     for idx_x, x in enumerate(x_data):
-        if x => max_val > y_data[idx_x]:
+        if x >= max_val > y_data[idx_x]:
             # timeout of x algo
             timeout_x.append(idx_x)
-        elif y_data[idx_x] => max_val > x:
+        elif y_data[idx_x] >= max_val > x:
             # timeout of y algo
             timeout_y.append(idx_x)
         elif y_data[idx_x] > max_val and x > max_val:
@@ -149,12 +149,12 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     auto_min_val *= 0.9
     ax1.set_autoscale_on(False)
     #===========================================================================
-    # if max_val is None and min_val is not None:
-    #     # User sets min_val
-    #     ax1.set_ylim([min_val, max_val])
-    #     ax1.set_xlim(ax1.get_ylim())
+    #if max_val is None and min_val is not None:
+    #    # User sets min_val
+    #    ax1.set_ylim([min_val, max_val])
+    #    ax1.set_xlim(ax1.get_ylim())
     #===========================================================================
-    elif max_val is not None and min_val is None:
+    if max_val is not None and min_val is None:
         # User sets max val
         ax1.set_ylim([auto_min_val, max_val])
         ax1.set_xlim(ax1.get_ylim())

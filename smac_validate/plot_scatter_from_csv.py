@@ -35,7 +35,11 @@ def main():
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
                         help="Plot some debug info")
     parser.add_argument("-f", "--lineFactors", dest="linefactors",
-                        default=None, help="Plot X speedup/slowdown, format 'X,..,X' (no spaces)")
+                        default=None, help="Plot X speedup/slowdown, format "
+                                           "'X,..,X' (no spaces)")
+    parser.add_argument("-c", "--columns", dest="columns", default='1,2',
+                        help="Use these columns from csv; starting at 1, format"
+                             " 'xaxis,yaxis' (nospaces)")
 
     args, unknown = parser.parse_known_args()
 
@@ -49,10 +53,27 @@ def main():
         parser.print_help()
         sys.exit(1)
 
+    # Check selected columns
+    columns = [int(float(i)) for i in args.columns.split(",")]
+    if len(columns) != 2:
+        raise ValueError("Selected more or less than two columns: %s" %
+                         str(columns))
+    # As python starts with 0
+    columns = [i-1 for i in columns]
+
     # Load validationResults
     res_header, res_data = load_data.read_csv(unknown[0], has_header=True, data_type=np.float)
     res_data = np.array(res_data)
     print "Found %s points" % (str(res_data.shape))
+
+    # Get data
+    if max(columns) > res_data.shape[1]-1:
+        raise ValueError("You selected column %d, but there are only %d" %
+                         (max(columns)+1, res_data.shape[1]))
+    if min(columns) < 0:
+        raise ValueError("You selected a column number less than 1")
+    data_x = res_data[:, columns[0]]
+    data_y = res_data[:, columns[1]]
 
     linefactors = list()
     if args.linefactors is not None:
@@ -72,7 +93,7 @@ def main():
         print "Save to %s" % args.save
     else:
         print "Show"
-    plot_scatter.plot_scatter_plot(x_data=res_data[:, 0], y_data=res_data[:, 1], labels=res_header, title=args.title, save=save,
+    plot_scatter.plot_scatter_plot(x_data=data_x, y_data=data_y, labels=res_header, title=args.title, save=save,
                       max_val=args.max, min_val=args.min, grey_factor=args.grey_factor,
                       linefactors=linefactors, debug=args.verbose)
 

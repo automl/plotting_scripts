@@ -7,6 +7,7 @@ import itertools
 from matplotlib.pyplot import tight_layout, figure, subplots_adjust, subplot, savefig, show
 import matplotlib.gridspec
 import numpy as np
+from matplotlib.ticker import FormatStrFormatter
 
 import load_data
 
@@ -19,8 +20,10 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     c_angle_bisector = "#e41a1c"  # Red
     c_good_points = "#999999"     # Grey
     c_other_points = "k"
-
+    size = 1
     st_ref = "--"
+
+    maximum_value = max_val
 
     # Colors
     ref_colors = itertools.cycle([  # "#e41a1c",    # Red
@@ -47,7 +50,8 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
         auto_min_val = min([min(x_data), min(y_data), min_val])
     else:
         auto_min_val = min([min(x_data), min(y_data)])
-    auto_max_val = max_val
+    auto_max_val = maximum_value
+    timeout_val = maximum_value + 10**int((np.log10(max_val)))
 
     # Plot angle bisector and reference_lines
     out_up = auto_max_val
@@ -59,10 +63,11 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
         for f in linefactors:
             c = ref_colors.next()
             # Lower reference lines
-            ax1.plot([f*out_lo, out_up], [out_lo, (1.0/f)*out_up], c=c, linestyle=st_ref)
+            ax1.plot([f*out_lo, out_up], [out_lo, (1.0/f)*out_up], c=c,
+                     linestyle=st_ref, linewidth=size*1.5)
             # Upper reference lines
-            ax1.plot([out_lo, (1.0/f)*out_up], [f*out_lo, out_up], c=c, linestyle=st_ref)
-
+            ax1.plot([out_lo, (1.0/f)*out_up], [f*out_lo, out_up], c=c,
+                     linestyle=st_ref, linewidth=size*1.5)
             offset = 1.1
             if int(f) == f:
                 lf_str = "%dx" % f
@@ -95,17 +100,30 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
 
     # Regular points
     if len(grey_idx) > 1:
-        ax1.scatter(x_data[grey_idx], y_data[grey_idx], marker=grey_marker, c=c_good_points)
-    ax1.scatter(x_data[rest_idx], y_data[rest_idx], marker=regular_marker, c=c_other_points)
+        ax1.scatter(x_data[grey_idx], y_data[grey_idx], marker=grey_marker,
+                    c=c_good_points)
+    ax1.scatter(x_data[rest_idx], y_data[rest_idx], marker=regular_marker,
+                c=c_other_points)
 
-    # Timeout points
-    timeout_val = max_val # int(np.log10(10*max_val))
-    ax1.scatter([timeout_val]*len(timeout_x), y_data[timeout_x], marker=timeout_marker, c=c_other_points)
-    ax1.scatter([timeout_val]*len(timeout_both), [timeout_val]*len(timeout_both), marker=timeout_marker, c=c_other_points)
-    ax1.scatter(x_data[timeout_y], [timeout_val]*len(timeout_y), marker=timeout_marker, c=c_other_points)
-    # Timeout line
-    ax1.plot([timeout_val, timeout_val], [auto_min_val, timeout_val], c=c_other_points, linestyle=":")
-    ax1.plot([auto_min_val, timeout_val], [timeout_val, timeout_val], c=c_other_points, linestyle=":")
+    # Timeout lines
+    ax1.plot([maximum_value, maximum_value], [auto_min_val, maximum_value],
+             c=c_other_points, linestyle="--", zorder=0, linewidth=size)
+    ax1.plot([auto_min_val, maximum_value], [maximum_value, maximum_value],
+             c=c_other_points, linestyle="--", zorder=0, linewidth=size)
+
+    # Plot timeout points
+    ax1.scatter([timeout_val]*len(timeout_x), y_data[timeout_x],
+                marker=timeout_marker, c=c_other_points)
+    ax1.scatter([timeout_val]*len(timeout_both), [timeout_val]*len(timeout_both),
+                marker=timeout_marker, c=c_other_points)
+    ax1.scatter(x_data[timeout_y], [timeout_val]*len(timeout_y),
+                marker=timeout_marker, c=c_other_points)
+
+    # Plot timeout line
+    ax1.plot([timeout_val, timeout_val], [auto_min_val, timeout_val],
+             c=c_other_points, linestyle=":", zorder=0)
+    ax1.plot([auto_min_val, timeout_val], [timeout_val, timeout_val],
+             c=c_other_points, linestyle=":", zorder=0)
 
     if debug:
         # debug option
@@ -119,28 +137,14 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     ax1.set_xlabel(labels[0])
     ax1.set_ylabel(labels[1])
 
-    new_ticks_x = ax1.get_xticks()
-    new_ticks_x = new_ticks_x[:-2]
-    new_ticks_label = list(new_ticks_x)
-    for l_idx in range(len(new_ticks_label)):
-        # change 1x10^2 to 100
-        if new_ticks_label[l_idx] >= 1:
-            new_ticks_label[l_idx] = int(new_ticks_label[l_idx])
-    new_ticks_label.append("timeout")
-    ax1.set_xticklabels(new_ticks_label)  # , rotation=45)
-    ax1.set_yticklabels(new_ticks_label)  # , rotation=45)
+    if max_val > 10:
+        ax1.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+        ax1.yaxis.set_major_formatter(FormatStrFormatter('%d'))
 
     if debug:
         # Plot legend
         leg = ax1.legend(loc='best', fancybox=True)
         leg.get_frame().set_alpha(0.5)
-
-    # Remove top and right line
-    # spines_to_remove = ['top', 'right']
-    # for spine in spines_to_remove:
-    #     ax1.spines[spine].set_visible(False)
-    # ax1.get_xaxis().tick_bottom()
-    # ax1.get_yaxis().tick_left()
 
     # Save or show figure
     tight_layout()
@@ -149,12 +153,6 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     max_val *= 2
     auto_min_val *= 0.9
     ax1.set_autoscale_on(False)
-    #===========================================================================
-    #if max_val is None and min_val is not None:
-    #    # User sets min_val
-    #    ax1.set_ylim([min_val, max_val])
-    #    ax1.set_xlim(ax1.get_ylim())
-    #===========================================================================
     if max_val is not None and min_val is None:
         # User sets max val
         ax1.set_ylim([auto_min_val, max_val])
@@ -168,7 +166,24 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
         ax1.set_xlim([auto_min_val, max_val])
         ax1.set_ylim(ax1.get_xlim())
 
-    
+    # Plot maximum value as tick
+    if int(maximum_value) == maximum_value:
+        maximum_value = int(maximum_value)
+    if int(np.log10(maximum_value)) != np.log10(maximum_value):
+        # We already have this ticklabel as a regular label
+        ax1.text(ax1.get_xlim()[0], maximum_value, str(maximum_value),
+                 horizontalalignment='right', verticalalignment="center",
+                 fontsize=12)
+        ax1.text(maximum_value, ax1.get_ylim()[0] - 0.1*np.abs(ax1.get_ylim()[0]), str(maximum_value),
+                 horizontalalignment='center', verticalalignment="top",
+                 fontsize=12)
+
+    ax1.text(ax1.get_xlim()[0], timeout_val, "timeout",
+             horizontalalignment='right', verticalalignment="center",
+             fontsize=12)
+    ax1.text(timeout_val, ax1.get_ylim()[0], "timeout",
+             horizontalalignment='center', verticalalignment="top",
+             fontsize=12, rotation=90)
     if save != "":
         savefig(save, dpi=100, facecolor='w', edgecolor='w',
                 orientation='portrait', papertype=None, format=None,

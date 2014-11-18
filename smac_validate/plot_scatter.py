@@ -205,7 +205,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
              verticalalignment="center", fontsize=user_fontsize)
     ax1.text(timeout_val,
              ax1.get_ylim()[0] - 0.1 * np.abs(ax1.get_ylim()[0]),
-             "timeout ",  horizontalalignment='right', verticalalignment="top",
+             "timeout ",  horizontalalignment='center', verticalalignment="top",
              fontsize=user_fontsize, rotation=45)
 
     #########

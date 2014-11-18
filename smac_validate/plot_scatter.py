@@ -94,7 +94,8 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
             rest_idx.append(idx_x)
 
     # Regular points
-    ax1.scatter(x_data[grey_idx], y_data[grey_idx], marker=grey_marker, c=c_good_points)
+    if len(grey_idx) > 1:
+        ax1.scatter(x_data[grey_idx], y_data[grey_idx], marker=grey_marker, c=c_good_points)
     ax1.scatter(x_data[rest_idx], y_data[rest_idx], marker=regular_marker, c=c_other_points)
 
     # Timeout points
@@ -177,7 +178,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
 
 
 def main():
-    prog = "python plot_scatter.py any.csv"
+    prog = "python plot_scatter.py"
     description = "Plots performances of the best config at one time vs another in a scatter plot"
 
     parser = ArgumentParser(description=description, prog=prog)

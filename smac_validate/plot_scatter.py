@@ -181,7 +181,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
                  fontsize=12)
         ax1.text(maximum_value,
                  ax1.get_ylim()[0] - 0.1 * np.abs(ax1.get_ylim()[0]),
-                 str(maximum_value),
+                 str(maximum_value) + " ",
                  horizontalalignment='center', verticalalignment="top",
                  fontsize=12)
 
@@ -232,7 +232,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
 
     # Change tick labels from 10^-1 to 0.1
     print ax1.get_xticks()[0] >= 0.001
-    if max_val > 10 and ax1.get_xticks()[0] >= 0.01:
+    if 1000 > max_val > 10 and ax1.get_xticks()[0] >= 0.01:
         ax1.xaxis.set_major_formatter(FormatStrFormatter('%d'))
         ax1.yaxis.set_major_formatter(FormatStrFormatter('%d'))
 

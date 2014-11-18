@@ -97,9 +97,15 @@ def main():
         print "Save to %s" % args.save
     else:
         print "Show"
-    plot_scatter.plot_scatter_plot(x_data=data_x, y_data=data_y, labels=res_header, title=args.title, save=save,
-                      max_val=args.max, min_val=args.min, grey_factor=args.grey_factor,
-                      linefactors=linefactors, debug=args.verbose)
+    plot_scatter.plot_scatter_plot(x_data=data_x, y_data=data_y,
+                                   labels=res_header, title=args.title,
+                                   save=save, max_val=args.max,
+                                   min_val=args.min,
+                                   grey_factor=args.grey_factor,
+                                   linefactors=linefactors,
+                                   debug=args.verbose,
+                                   user_fontsize=args.user_fontsize,
+                                   dpi=args.dpi)
 
 
 if __name__ == "__main__":

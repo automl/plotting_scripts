@@ -78,6 +78,8 @@ def main():
         raise ValueError("You selected a column number less than 1")
     data_x = res_data[:, columns[0]]
     data_y = res_data[:, columns[1]]
+    label_x = res_header[columns[0]]
+    label_y = res_header[columns[1]]
 
     linefactors = list()
     if args.linefactors is not None:
@@ -98,7 +100,8 @@ def main():
     else:
         print "Show"
     plot_scatter.plot_scatter_plot(x_data=data_x, y_data=data_y,
-                                   labels=res_header, title=args.title,
+                                   labels=[label_x, label_y],
+                                   title=args.title,
                                    save=save, max_val=args.max,
                                    min_val=args.min,
                                    grey_factor=args.grey_factor,

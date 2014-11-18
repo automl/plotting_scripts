@@ -82,9 +82,9 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
                      linestyle=st_ref, linewidth=size*1.5)
             offset = 1.1
             if int(f) == f:
-                lf_str = r"$%d\times$" % f
+                lf_str = "%dx" % f
             else:
-                lf_str = r"$%2.1f\times$" % f
+                lf_str = "%2.1fx" % f
             ax1.text((1.0/f)*out_up, out_up*offset, lf_str, color=c,
                      fontsize=linefactor_size)
             ax1.text(out_up*offset, (1.0/f)*out_up, lf_str, color=c,

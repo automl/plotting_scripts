@@ -23,6 +23,12 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     size = 1
     st_ref = "--"
 
+    #------
+    # maximum_value: location for timeout points
+    # max_val      : Initially user-defined timeout, then set to axes limit
+    # time_out_val : location for timeout points
+    # -----
+
     maximum_value = max_val
 
     # Colors
@@ -77,7 +83,8 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
             ax1.text(out_up*offset, (1.0/f)*out_up, lf_str, color=c, fontsize=10)
 
 
-    # Scatter
+    #######
+    #  Scatter
     grey_idx = list()
     timeout_x = list()
     timeout_y = list()
@@ -105,13 +112,13 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     ax1.scatter(x_data[rest_idx], y_data[rest_idx], marker=regular_marker,
                 c=c_other_points)
 
-    # Timeout lines
+    # max_val lines
     ax1.plot([maximum_value, maximum_value], [auto_min_val, maximum_value],
              c=c_other_points, linestyle="--", zorder=0, linewidth=size)
     ax1.plot([auto_min_val, maximum_value], [maximum_value, maximum_value],
              c=c_other_points, linestyle="--", zorder=0, linewidth=size)
 
-    # Plot timeout points
+    # Timeout points
     ax1.scatter([timeout_val]*len(timeout_x), y_data[timeout_x],
                 marker=timeout_marker, c=c_other_points)
     ax1.scatter([timeout_val]*len(timeout_both), [timeout_val]*len(timeout_both),
@@ -136,10 +143,6 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     # Set axes labels
     ax1.set_xlabel(labels[0])
     ax1.set_ylabel(labels[1])
-
-    if max_val > 10:
-        ax1.xaxis.set_major_formatter(FormatStrFormatter('%d'))
-        ax1.yaxis.set_major_formatter(FormatStrFormatter('%d'))
 
     if debug:
         # Plot legend
@@ -170,20 +173,69 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     if int(maximum_value) == maximum_value:
         maximum_value = int(maximum_value)
     if int(np.log10(maximum_value)) != np.log10(maximum_value):
-        # We already have this ticklabel as a regular label
-        ax1.text(ax1.get_xlim()[0], maximum_value, str(maximum_value),
+        # If we do not already have this ticklabel as a regular label
+        ax1.text(ax1.get_ylim()[0] - 0.1 * np.abs(ax1.get_ylim()[0]),
+                 maximum_value,
+                 str(maximum_value) + " ",
                  horizontalalignment='right', verticalalignment="center",
                  fontsize=12)
-        ax1.text(maximum_value, ax1.get_ylim()[0] - 0.1*np.abs(ax1.get_ylim()[0]), str(maximum_value),
+        ax1.text(maximum_value,
+                 ax1.get_ylim()[0] - 0.1 * np.abs(ax1.get_ylim()[0]),
+                 str(maximum_value),
                  horizontalalignment='center', verticalalignment="top",
                  fontsize=12)
 
-    ax1.text(ax1.get_xlim()[0], timeout_val, "timeout",
-             horizontalalignment='right', verticalalignment="center",
-             fontsize=12)
-    ax1.text(timeout_val, ax1.get_ylim()[0], "timeout",
-             horizontalalignment='center', verticalalignment="top",
-             fontsize=12, rotation=90)
+    # Plot 'timeout'
+    ax1.text(ax1.get_xlim()[0] - 0.1 * np.abs(ax1.get_ylim()[0]),
+             timeout_val,
+             "timeout ", horizontalalignment='right',
+             verticalalignment="center", fontsize=12)
+    ax1.text(timeout_val,
+             ax1.get_ylim()[0] - 0.1 * np.abs(ax1.get_ylim()[0]),
+             "timeout ",  horizontalalignment='center', verticalalignment="top",
+             fontsize=12, rotation=45)
+
+    #########
+    # Adjust ticks > max_val
+    ax1.xaxis.set_ticks_position('bottom')
+    ax1.yaxis.set_ticks_position('left')
+    # major axes
+    for tic in ax1.xaxis.get_major_ticks():
+        if tic._loc > maximum_value:
+            tic.tick1On = tic.tick2On = False
+    for tic in ax1.yaxis.get_major_ticks():
+        if tic._loc > maximum_value:
+            tic.tick1On = tic.tick2On = False
+
+    # minor axes
+    for tic in ax1.xaxis.get_minor_ticks():
+        if tic._loc > maximum_value:
+            tic.tick1On = tic.tick2On = False
+    for tic in ax1.yaxis.get_minor_ticks():
+        if tic._loc > maximum_value:
+            tic.tick1On = tic.tick2On = False
+
+    # tick labels
+    ticks_x = ax1.get_xticks()
+    new_ticks_label = list()
+    for l_idx in range(len(ticks_x)):
+        if ticks_x[l_idx] < maximum_value:
+            new_ticks_label.append(ticks_x[l_idx])
+    ax1.set_xticklabels(new_ticks_label)  # , rotation=45)
+
+    ticks_y = ax1.get_yticks()
+    new_ticks_label = list()
+    for l_idx in range(len(ticks_y)):
+        if ticks_x[l_idx] < maximum_value:
+            new_ticks_label.append(ticks_y[l_idx])
+    ax1.set_yticklabels(new_ticks_label)  # , rotation=45)
+
+    # Change tick labels from 10^-1 to 0.1
+    print ax1.get_xticks()[0] >= 0.001
+    if max_val > 10 and ax1.get_xticks()[0] >= 0.01:
+        ax1.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+        ax1.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+
     if save != "":
         savefig(save, dpi=100, facecolor='w', edgecolor='w',
                 orientation='portrait', papertype=None, format=None,

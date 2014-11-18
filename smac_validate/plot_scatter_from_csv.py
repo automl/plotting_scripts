@@ -13,7 +13,8 @@ import plot_scatter
 
 def main():
     prog = "python plot_scatter.py any.csv"
-    description = "Plots performances of the best config at one time vs another in a scatter plot"
+    description = "Reads performances from a two-column .csv and creates a" \
+                  " scatterplot"
 
     parser = ArgumentParser(description=description, prog=prog)
 

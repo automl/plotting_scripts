@@ -14,9 +14,9 @@ import load_data
 
 def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
                       min_val=None, max_val=1000, grey_factor=1, linefactors=None):
-    regular_marker = '+'
-    timeout_marker = '.'
-    grey_marker = 'x'
+    regular_marker = 'x'
+    timeout_marker = '+'
+    grey_marker = '.'
     c_angle_bisector = "#e41a1c"  # Red
     c_good_points = "#999999"     # Grey
     c_other_points = "k"
@@ -51,7 +51,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     else:
         auto_min_val = min([min(x_data), min(y_data)])
     auto_max_val = maximum_value
-    timeout_val = maximum_value + 10**int((np.log10(max_val)))
+    timeout_val = maximum_value *2 #+ 10**int((np.log10(max_val)))
 
     # Plot angle bisector and reference_lines
     out_up = auto_max_val
@@ -90,7 +90,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
         elif y_data[idx_x] >= max_val > x:
             # timeout of y algo
             timeout_y.append(idx_x)
-        elif y_data[idx_x] > max_val and x > max_val:
+        elif y_data[idx_x] >= max_val and x >= max_val:
             # timeout of both algos
             timeout_both.append(idx_x)
         elif y_data[idx_x] < grey_factor*x and x < grey_factor*y_data[idx_x]:
@@ -120,10 +120,10 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
                 marker=timeout_marker, c=c_other_points)
 
     # Plot timeout line
-    ax1.plot([timeout_val, timeout_val], [auto_min_val, timeout_val],
-             c=c_other_points, linestyle=":", zorder=0)
-    ax1.plot([auto_min_val, timeout_val], [timeout_val, timeout_val],
-             c=c_other_points, linestyle=":", zorder=0)
+#    ax1.plot([timeout_val, timeout_val], [auto_min_val, timeout_val],
+#             c=c_other_points, linestyle=":", zorder=0)
+#    ax1.plot([auto_min_val, timeout_val], [timeout_val, timeout_val],
+#             c=c_other_points, linestyle=":", zorder=0)
 
     if debug:
         # debug option
@@ -150,7 +150,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     tight_layout()
     subplots_adjust(top=0.85)
     
-    max_val *= 2
+    max_val = timeout_val*2
     auto_min_val *= 0.9
     ax1.set_autoscale_on(False)
     if max_val is not None and min_val is None:

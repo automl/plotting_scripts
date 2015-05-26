@@ -15,7 +15,7 @@ import load_data
 def plot_optimization_trace(time_list, performance_list, title, name_list,
                             logy=False, logx=False, save="",
                             y_min=None, y_max=None, x_min=None, x_max=None):
-    markers = 'o'
+    markers = itertools.cycle(['o', 'x', '^', '*'])
     colors = itertools.cycle(["#e41a1c",    # Red
                               "#377eb8",    # Blue
                               "#4daf4a",    # Green
@@ -43,6 +43,7 @@ def plot_optimization_trace(time_list, performance_list, title, name_list,
 
     for idx, performance in enumerate(performance_list):
         color = colors.next()
+        marker = markers.next()
         if logy:
             performance = np.log10(performance)
         if logx and time_list[idx][0] == 0:
@@ -54,7 +55,7 @@ def plot_optimization_trace(time_list, performance_list, title, name_list,
         ax1.fill_between(time_list[idx], mean-std, mean+std,
                          facecolor=color, alpha=0.3, edgecolor=color)
         ax1.plot(time_list[idx], mean, color=color, linewidth=size,
-                 linestyle=linestyles, marker=markers, label=name_list[idx])
+                 linestyle=linestyles, marker=marker, label=name_list[idx])
 
         # Get limits
         # For y_min we always take the lowest value
@@ -177,15 +178,22 @@ def main():
         times.append(t)
         performances.append(p)
 
+    # Sort names alphabetical as done here:
+    # http://stackoverflow.com/questions/15610724/sorting-multiple-lists-in-python-based-on-sorting-of-a-single-list
+    sorted_lists = sorted(itertools.izip(name_list, times, performances), key=lambda x: x[0])
+    name_list, times, performances = [[x[i] for x in sorted_lists] for i in range(3)]
+
     save = ""
     if args.save != "":
         save = args.save
         print "Save to %s" % args.save
     else:
         print "Show"
-    plot_optimization_trace(time_list=times, performance_list=performances, title=args.title,
-                            name_list=name_list, logy=args.logy, logx=args.logx, save=save, y_min=args.ymin,
-                            y_max=args.ymax, x_min=args.xmin, x_max=args.xmax)
+    plot_optimization_trace(time_list=times, performance_list=performances,
+                            title=args.title, name_list=name_list,
+                            logy=args.logy, logx=args.logx, save=save,
+                            y_min=args.ymin, y_max=args.ymax, x_min=args.xmin,
+                            x_max=args.xmax)
 
 
 

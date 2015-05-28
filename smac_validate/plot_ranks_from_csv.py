@@ -39,7 +39,9 @@ def calculate_ranking(performances, estimators, bootstrap_samples=500):
 
         for combination in combinations:
             ranks = scipy.stats.rankdata(
-                [np.round(performances[estimators[idx]]["performances"][number][i], 5) for idx, number in enumerate(combination)])
+                [np.round(
+                    performances[estimators[idx]]["performances"][number][i], 5)
+                 for idx, number in enumerate(combination)])
             num_products += 1
             for j, est in enumerate(estimators):
                 ranking[i][j] += ranks[j]
@@ -89,8 +91,6 @@ def plot_optimization_trace(time_list, performance_list, title, name_list,
 
         mean = np.mean(performance, axis=0)
         std = np.std(performance, axis=0)
-        print mean
-        print std
         # Plot mean and std
         ax1.fill_between(time_list[idx], mean-std, mean+std,
                          facecolor=color, alpha=0.3, edgecolor=color)
@@ -129,7 +129,8 @@ def plot_optimization_trace(time_list, performance_list, title, name_list,
     elif y_max > y_min and y_max is not None and y_min is not None:
         ax1.set_ylim([y_min, y_max])
     else:
-        ax1.set_ylim([auto_y_min - 0.01*abs(auto_y_max - auto_y_min), auto_y_max + 0.01*abs(auto_y_max - auto_y_min)])
+        ax1.set_ylim([auto_y_min - 0.01*abs(auto_y_max - auto_y_min),
+                      auto_y_max + 0.01*abs(auto_y_max - auto_y_min)])
 
     if x_max is None and x_min is not None:
         ax1.set_xlim([x_min - 0.1*abs(x_min), auto_x_max + 0.1*abs(auto_x_max)])
@@ -172,16 +173,15 @@ def main():
     parser.add_argument("--xmin", dest="xmin", type=float,
                         default=None, help="Minimum of the x-axis")
     parser.add_argument("-s", "--save", dest="save",
-                        default="", help="Where to save plot instead of showing it?")
+                        default="",
+                        help="Where to save plot instead of showing it?")
     parser.add_argument("-t", "--title", dest="title",
                         default="", help="Optional supertitle for plot")
     parser.add_argument("--maxvalue", dest="maxvalue", type=float,
-                        default=sys.maxint, help="Replace all values higher than this?")
-    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
-                        help="print number of runs on plot")
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('--train', dest="train",  default=False, action='store_true')
-    group.add_argument('--test', dest="test", default=True, action='store_true')
+                        default=sys.maxint,
+                        help="Replace all values higher than this?")
+    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true",
+                        default=False, help="print number of runs on plot")
 
     args, unknown = parser.parse_known_args()
 
@@ -193,37 +193,13 @@ def main():
         sys.exit(1)
 
     # Get files and names
-    file_list, name_list = load_data.get_file_and_name_list(unknown, match_file='.csv', len_name=2)
+    file_list, name_list = load_data.get_file_and_name_list(unknown,
+                                                            match_file='.csv',
+                                                            len_name=2)
     for idx in range(len(name_list)):
         assert len(file_list[idx]) == 1
         print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))
 
-    times = list()
-    performances = list()
-    for idx, name in enumerate(name_list):
-        t = None
-        p = None
-        print "Processing %s" % name
-        fh = open(file_list[idx][0], 'r')
-        reader = csv.reader(fh)
-        for row in reader:
-            if t is None:
-                # first row
-                p = list([list() for i in range(len(row)-1)])
-                t = list()
-                continue
-            t.append(float(row[0]))
-            del row[0]
-            [p[i].append(float(row[i])) for i in range(len(row))]
-        times.append(t)
-        performances.append(p)
-
-    # Sort names alphabetical as done here:
-    # http://stackoverflow.com/questions/15610724/sorting-multiple-lists-in-python-based-on-sorting-of-a-single-list
-    sorted_lists = sorted(itertools.izip(name_list, times, performances), key=lambda x: x[0])
-    name_list, times, performances = [[x[i] for x in sorted_lists] for i in range(3)]
-
-    # build dict with dataset as key
     dataset_dict = OrderedDict()
     estimator_list = set()
     dataset_list = set()
@@ -234,19 +210,26 @@ def main():
         dataset_list.add(dataset)
         if dataset not in dataset_dict:
             dataset_dict[dataset] = OrderedDict()
-        if est not in dataset_dict[dataset]:
-            dataset_dict[dataset][est] = dict()
-            dataset_dict[dataset][est]["performances"] = list()
-            dataset_dict[dataset][est]["times"] = list()
-        # We need to append one time list for each estimator
-        dataset_dict[dataset][est]["times"].extend([times[idx] for i in range(len(performances[idx]))])
-        dataset_dict[dataset][est]["performances"].extend(performances[idx])
+        t = None
+        p = None
+        print "Processing %s, %s" % (dataset, est)
+        fh = open(file_list[idx][0], 'r')
+        reader = csv.reader(fh)
+        for row in reader:
+            if t is None:
+                # first row
+                p = list([list() for i in range(len(row)-1)])
+                t = list()
+                dataset_dict[dataset][est] = OrderedDict()
+                continue
+            t.append(float(row[0]))
+            del row[0]
+            [p[i].append(float(row[i])) for i in range(len(row))]
+        dataset_dict[dataset][est]["times"] = [t for i in range(len(p))]
+        dataset_dict[dataset][est]["performances"] = p
 
-    # del what we don't need anymore to not get variable name conflicts
-    del name_list, times, performances, sorted_lists
-
-    # Make a list
-    estimator_list = list(estimator_list)
+    # Make lists
+    estimator_list = sorted(list(estimator_list))
     dataset_list = list(dataset_list)
 
     print "Found datasets: %s" % str(dataset_list)
@@ -261,11 +244,12 @@ def main():
         # We have a list of lists of lists, but we need a list of lists
         tmp_p_list = list()
         tmp_t_list = list()
-        len_list = list()
+        len_list = list()       # holds num of arrays for each est
         for est in estimator_list:
             # put all performances in one list = flatten
             if est not in dataset_dict[dataset]:
-                raise ValueError("Estimator %s is not given for dataset %s" % (est, dataset))
+                raise ValueError("Estimator %s is not given for dataset %s" %
+                                 (est, dataset))
             len_list.append(len(dataset_dict[dataset][est]["performances"]))
             tmp_p_list.extend(dataset_dict[dataset][est]["performances"])
             tmp_t_list.extend(dataset_dict[dataset][est]["times"])
@@ -273,9 +257,11 @@ def main():
         # sanity check
         assert len(tmp_t_list) == len(tmp_p_list)
         assert len(tmp_t_list[0]) == len(tmp_p_list[0])
-        p, t = merge.fill_trajectory(performance_list=tmp_p_list, time_list=tmp_t_list)
+        p, t = merge.fill_trajectory(performance_list=tmp_p_list,
+                                     time_list=tmp_t_list)
 
-        # Now we can refill the dict
+        # Now we can refill the dict using len_list as it tells us
+        # which arrays belong to which estimator
         for idx, est in enumerate(estimator_list):
             dataset_dict[dataset][est]['performances'] = p[:len_list[idx]]
             # sanity check
@@ -287,31 +273,27 @@ def main():
     ranking_list = list()
     time_list = list()
     for dataset in dataset_list:
-        ranking, e_list = calculate_ranking(performances=dataset_dict[dataset], estimators=estimator_list)
+        ranking, e_list = calculate_ranking(performances=dataset_dict[dataset],
+                                            estimators=estimator_list)
         ranking_list.extend(ranking)
         assert len(e_list) == len(estimator_list)
         time_list.extend([dataset_dict[dataset]["time"] for i in range(len(e_list))])
 
-    # We have to fill trajectories again as ranks are calculated on different time steps
-
-    #  sanity check
+    # Fill trajectories as ranks are calculated on different time steps
+    # sanity check
     assert len(ranking_list) == len(time_list)
-    assert len(ranking_list[0]) == len(time_list[0]), "%d is not %d" % (len(ranking_list[0]), len(time_list[0]))
-
-    p, times = merge.fill_trajectory(performance_list=ranking_list, time_list=time_list)
-
+    assert len(ranking_list[0]) == len(time_list[0]), "%d is not %d" % \
+                                                      (len(ranking_list[0]),
+                                                       len(time_list[0]))
+    p, times = merge.fill_trajectory(performance_list=ranking_list,
+                                     time_list=time_list)
     del ranking_list, dataset_dict
 
-    # Now average
     performance_list = [list() for e in estimator_list]
     time_list = [times for e in estimator_list]
     for idd, dataset in enumerate(dataset_list):
         for ide, est in enumerate(estimator_list):
             performance_list[ide].append(p[idd*(len(estimator_list))+ide])
-
-    #  sanity check
-    print performance_list
-    print time_list
 
     save = ""
     if args.save != "":

@@ -9,59 +9,7 @@ import numpy as np
 import load_data
 
 
-def main():
-    prog = "python merge_performance_different_times.py <WhatIsThis> " \
-           "one/or/many/*ClassicValidationResults*.csv"
-    description = "Merge results to one csv"
-
-    parser = ArgumentParser(description=description, prog=prog)
-
-    # General Options
-    parser.add_argument("--maxvalue", dest="maxvalue", type=float,
-                        default=sys.maxint,
-                        help="Replace all values higher than this?")
-    parser.add_argument("--save", dest="saveTo", type=str,
-                        required=True, help="Where to save the csv?")
-
-    args, unknown = parser.parse_known_args()
-
-    sys.stdout.write("\nFound " + str(len(unknown)) + " arguments\n")
-
-    if len(unknown) < 1:
-        print "To less arguments given"
-        parser.print_help()
-        sys.exit(1)
-
-    # Get files and names
-    arg_list = list(["dummy", ])
-    arg_list.extend(unknown)
-    file_list, name_list = load_data.get_file_and_name_list(arg_list, match_file='.csv')
-    del arg_list
-
-    for time_idx in range(len(name_list)):
-        print "%20s contains %d file(s)" % (name_list[time_idx], len(file_list[time_idx]))
-    if len(file_list) > 1:
-        sys.stderr.write("Cannot handle more than one experiment")
-        parser.print_help()
-        sys.exit(1)
-
-    file_list = file_list[0]
-
-    # Get data from csv
-    performance_list = list()
-    time_list = list()
-
-    for fl in file_list:
-        _none, csv_data = load_data.read_csv(fl, has_header=True)
-        csv_data = np.array(csv_data)
-        # Replace too high values with args.maxint
-        testdata = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 2]]
-        #traindata = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 1]]
-        time_steps = [float(i.strip()) for i in csv_data[:, 0]]
-        assert time_steps[0] == 0
-        performance_list.append(testdata)
-        time_list.append(time_steps)
-
+def fill_trajectory(performance_list, time_list):
     # Fill times
     len_exp = list([len(i) for i in performance_list])
     num_exp = len(performance_list)
@@ -115,9 +63,70 @@ def main():
         last_perf = [p[idx] for p in perf_list]
 
     print "len(performance)", [len(p) for p in performance]
-    print "Performance", performance
+    # print "Performance", performance
     print "len(time)", len(time_)
-    print "Time steps", time_
+    # print "Time steps", time_
+    return performance, time_
+
+def main():
+    prog = "python merge_performance_different_times.py <WhatIsThis> " \
+           "one/or/many/*ClassicValidationResults*.csv"
+    description = "Merge results to one csv"
+
+    parser = ArgumentParser(description=description, prog=prog)
+
+    # General Options
+    parser.add_argument("--maxvalue", dest="maxvalue", type=float,
+                        default=sys.maxint,
+                        help="Replace all values higher than this?")
+    parser.add_argument("--save", dest="saveTo", type=str,
+                        required=True, help="Where to save the csv?")
+
+    args, unknown = parser.parse_known_args()
+
+    sys.stdout.write("\nFound " + str(len(unknown)) + " arguments\n")
+
+    if len(unknown) < 1:
+        print "To less arguments given"
+        parser.print_help()
+        sys.exit(1)
+
+    # Get files and names
+    arg_list = list(["dummy", ])
+    arg_list.extend(unknown)
+    file_list, name_list = load_data.get_file_and_name_list(arg_list, match_file='.csv')
+    del arg_list
+
+    for time_idx in range(len(name_list)):
+        print "%20s contains %d file(s)" % (name_list[time_idx], len(file_list[time_idx]))
+    if len(file_list) > 1:
+        sys.stderr.write("Cannot handle more than one experiment")
+        parser.print_help()
+        sys.exit(1)
+
+    file_list = file_list[0]
+
+    # Get data from csv
+    performance_list = list()
+    time_list = list()
+
+    for fl in file_list:
+        _none, csv_data = load_data.read_csv(fl, has_header=True)
+        csv_data = np.array(csv_data)
+        # Replace too high values with args.maxint
+        testdata = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 2]]
+        #traindata = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 1]]
+        time_steps = [float(i.strip()) for i in csv_data[:, 0]]
+        # assert time_steps[0] == 0
+        if time_steps[0] != 0:
+            time_steps.insert(0, 0)
+            testdata = [1-i for i in testdata]
+            testdata.insert(0, 2)
+            
+        performance_list.append(testdata)
+        time_list.append(time_steps)
+
+    performance, time_ = fill_trajectory(performance_list=performance_list, time_list=time_list)
 
     fh = open(args.saveTo, 'w')
     writer = csv.writer(fh)

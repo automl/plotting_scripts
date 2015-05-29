@@ -107,9 +107,9 @@ def plot_optimization_trace(time_list, performance_list, title, name_list,
 
     # Describe axes
     if logy:
-        ax1.set_ylabel("log10(Performance)")
+        ax1.set_ylabel("log10(Average Rank)")
     else:
-        ax1.set_ylabel("Performance")
+        ax1.set_ylabel("average rank")
 
     if logx:
         ax1.set_xlabel("log10(time) [sec]")

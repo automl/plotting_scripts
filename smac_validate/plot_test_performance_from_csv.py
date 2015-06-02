@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import csv
 import itertools
 import sys
@@ -9,32 +9,30 @@ from matplotlib.pyplot import tight_layout, figure, subplots_adjust, subplot, sa
 import matplotlib.gridspec
 import numpy as np
 
-import load_data
+import plot_util
 
 
-def plot_optimization_trace(time_list, performance_list, title, name_list,
-                            logy=False, logx=False, save="",
-                            y_min=None, y_max=None, x_min=None, x_max=None):
-    markers = itertools.cycle(['o', 'x', '^', '*'])
-    colors = itertools.cycle(["#e41a1c",    # Red
-                              "#377eb8",    # Blue
-                              "#4daf4a",    # Green
-                              "#984ea3",    # Purple
-                              "#ff7f00",    # Orange
-                              "#ffff33",    # Yellow
-                              "#a65628",    # Brown
-                              "#f781bf",    # Pink
-                              "#999999"])   # Grey
-    linestyles = '-'
+def plot_optimization_trace(time_list, performance_list, name_list, title=None,
+                            logy=False, logx=False, save="", properties=None,
+                            y_min=None, y_max=None, x_min=None, x_max=None,
+                            ylabel="Performance", scale_std=1):
+    # complete properties
+    if properties is None:
+        properties = dict()
+    properties['markers'] = itertools.cycle(['o', 's', '^', '*'])
+    properties = plot_util.fill_with_defaults(properties)
+
     size = 1
-
     # Set up figure
     ratio = 5
     gs = matplotlib.gridspec.GridSpec(ratio, 1)
-    fig = figure(1, dpi=100)
-    fig.suptitle(title, fontsize=16)
+    fig = figure(1, dpi=int(properties['dpi']))
     ax1 = subplot(gs[0:ratio, :])
-    ax1.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+    ax1.grid(True, linestyle='-', which='major', color=properties["gridcolor"],
+             alpha=float(properties["gridalpha"]))
+
+    if title is not None:
+        fig.suptitle(title, fontsize=int(properties["titlefontsize"]))
 
     auto_y_min = sys.maxint
     auto_y_max = -sys.maxint
@@ -42,20 +40,33 @@ def plot_optimization_trace(time_list, performance_list, title, name_list,
     auto_x_max = -sys.maxint
 
     for idx, performance in enumerate(performance_list):
-        color = colors.next()
-        marker = markers.next()
+        color = properties["colors"].next()
+        marker = properties["markers"].next()
+        linestyle = properties["linestyles"].next()
+        # Modify for NIPS2015
+        if name_list[idx] == "jointspace":
+            color = "k"
+        name_list[idx] = name_list[idx].replace("_", " ").\
+            replace("gaussian", "Gaussian").\
+            replace("k nearest neighbors", "kNN").\
+            replace("jointspace", "joint space")
+
         if logy:
             performance = np.log10(performance)
         if logx and time_list[idx][0] == 0:
-            time_list[idx][0] = 10**-5
+            time_list[idx][0] = 10**0
 
         mean = np.mean(performance, axis=0)
-        std = np.std(performance, axis=0)
+        std = np.std(performance, axis=0)*scale_std
         # Plot mean and std
-        ax1.fill_between(time_list[idx], mean-std, mean+std,
-                         facecolor=color, alpha=0.3, edgecolor=color)
-        ax1.plot(time_list[idx], mean, color=color, linewidth=size,
-                 linestyle=linestyles, marker=marker, label=name_list[idx])
+        if scale_std >= 0:
+            ax1.fill_between(time_list[idx], mean-std, mean+std,
+                             facecolor=color, alpha=0.3, edgecolor=color)
+        ax1.plot(time_list[idx], mean, color=color,
+                 linewidth=int(properties["linewidth"]), linestyle=linestyle,
+                 marker=marker, markersize=int(properties["markersize"]),
+                 label=name_list[idx],
+                 )
 
         # Get limits
         # For y_min we always take the lowest value
@@ -67,18 +78,18 @@ def plot_optimization_trace(time_list, performance_list, title, name_list,
 
     # Describe axes
     if logy:
-        ax1.set_ylabel("log10(Performance)")
+        ax1.set_ylabel("log10(%s)" % ylabel, fontsize=properties["labelfontsize"])
     else:
-        ax1.set_ylabel("Performance")
+        ax1.set_ylabel("%s" % ylabel, fontsize=properties["labelfontsize"])
 
     if logx:
-        ax1.set_xlabel("log10(time) [sec]")
+        ax1.set_xlabel("log10(time) [sec]", fontsize=properties["labelfontsize"])
         ax1.set_xscale("log")
         auto_x_min = max(0.1, auto_x_min)
     else:
         ax1.set_xlabel("time [sec]")
 
-    leg = ax1.legend(loc='best', fancybox=True)
+    leg = ax1.legend(loc='best', fancybox=True, prop={'size': int(properties["legendsize"])})
     leg.get_frame().set_alpha(0.5)
 
     # Set axes limits
@@ -104,7 +115,8 @@ def plot_optimization_trace(time_list, performance_list, title, name_list,
     tight_layout()
     subplots_adjust(top=0.85)
     if save != "":
-        savefig(save, dpi=100, facecolor='w', edgecolor='w',
+        print "Save plot to %s" % save
+        savefig(save, dpi=int(properties['dpi']), facecolor='w', edgecolor='w',
                 orientation='portrait', papertype=None, format=None,
                 transparent=False, pad_inches=0.1)
     else:
@@ -116,7 +128,8 @@ def main():
            "one/or/many/*ClassicValidationResults*.csv"
     description = "Merge results to one csv"
 
-    parser = ArgumentParser(description=description, prog=prog)
+    parser = ArgumentParser(description=description, prog=prog,
+                            formatter_class=ArgumentDefaultsHelpFormatter)
 
     # General Options
     parser.add_argument("--logy", action="store_true", dest="logy",
@@ -134,15 +147,20 @@ def main():
     parser.add_argument("-s", "--save", dest="save",
                         default="", help="Where to save plot instead of showing it?")
     parser.add_argument("-t", "--title", dest="title",
-                        default="", help="Optional supertitle for plot")
+                        default=None, help="Optional supertitle for plot")
     parser.add_argument("--maxvalue", dest="maxvalue", type=float,
                         default=sys.maxint, help="Replace all values higher than this?")
+    parser.add_argument("--ylabel", dest="ylabel",
+                        default="Minfunction value", help="y label")
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
                         help="print number of runs on plot")
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('--train', dest="train",  default=False, action='store_true')
-    group.add_argument('--test', dest="test", default=True, action='store_true')
 
+    # Properties
+    # We need this to show defaults for -h
+    defaults = plot_util.get_defaults()
+    for key in defaults:
+        parser.add_argument("--%s" % key, dest=key, default=None,
+                            help="%s, default: %s" % (key, str(defaults[key])))
     args, unknown = parser.parse_known_args()
 
     sys.stdout.write("\nFound " + str(len(unknown)) + " arguments\n")
@@ -153,9 +171,9 @@ def main():
         sys.exit(1)
 
     # Get files and names
-    file_list, name_list = load_data.get_file_and_name_list(unknown, match_file='.csv')
+    file_list, name_list = plot_util.get_file_and_name_list(unknown, match_file='.csv')
     for idx in range(len(name_list)):
-        assert len(file_list[idx]) == 1
+        assert len(file_list[idx]) == 1, "%s" % str(file_list[idx])
         print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))
 
     times = list()
@@ -183,18 +201,16 @@ def main():
     sorted_lists = sorted(itertools.izip(name_list, times, performances), key=lambda x: x[0])
     name_list, times, performances = [[x[i] for x in sorted_lists] for i in range(3)]
 
-    save = ""
-    if args.save != "":
-        save = args.save
-        print "Save to %s" % args.save
-    else:
-        print "Show"
-    plot_optimization_trace(time_list=times, performance_list=performances,
-                            title=args.title, name_list=name_list,
-                            logy=args.logy, logx=args.logx, save=save,
-                            y_min=args.ymin, y_max=args.ymax, x_min=args.xmin,
-                            x_max=args.xmax)
+    prop = {}
+    args_dict = vars(args)
+    for key in defaults:
+        prop[key] = args_dict[key]
 
+    plot_optimization_trace(time_list=times, performance_list=performances,
+                            title=args.title, name_list=name_list, ylabel=args.ylabel,
+                            logy=args.logy, logx=args.logx, save=args.save,
+                            y_min=args.ymin, y_max=args.ymax, x_min=args.xmin,
+                            x_max=args.xmax, properties=prop, scale_std=1)
 
 
 if __name__ == "__main__":

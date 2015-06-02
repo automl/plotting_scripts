@@ -6,7 +6,7 @@ import sys
 
 import numpy as np
 
-import load_data
+import plot_util
 
 
 def fill_trajectory(performance_list, time_list):
@@ -68,6 +68,7 @@ def fill_trajectory(performance_list, time_list):
     # print "Time steps", time_
     return performance, time_
 
+
 def main():
     prog = "python merge_performance_different_times.py <WhatIsThis> " \
            "one/or/many/*ClassicValidationResults*.csv"
@@ -94,7 +95,7 @@ def main():
     # Get files and names
     arg_list = list(["dummy", ])
     arg_list.extend(unknown)
-    file_list, name_list = load_data.get_file_and_name_list(arg_list, match_file='.csv')
+    file_list, name_list = plot_util.get_file_and_name_list(arg_list, match_file='.csv')
     del arg_list
 
     for time_idx in range(len(name_list)):
@@ -111,18 +112,14 @@ def main():
     time_list = list()
 
     for fl in file_list:
-        _none, csv_data = load_data.read_csv(fl, has_header=True)
+        _none, csv_data = plot_util.read_csv(fl, has_header=True)
         csv_data = np.array(csv_data)
         # Replace too high values with args.maxint
         testdata = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 2]]
         #traindata = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 1]]
         time_steps = [float(i.strip()) for i in csv_data[:, 0]]
-        # assert time_steps[0] == 0
-        if time_steps[0] != 0:
-            time_steps.insert(0, 0)
-            testdata = [1-i for i in testdata]
-            testdata.insert(0, 2)
-            
+        assert time_steps[0] == 0
+
         performance_list.append(testdata)
         time_list.append(time_steps)
 
@@ -135,7 +132,7 @@ def main():
     writer.writerow(header)
     for r, t in enumerate(time_):
         row = list([t, ])
-        row.extend([p[r] for p in performance])
+        row.extend(["%10.5f" % p[r] for p in performance])
         writer.writerow(row)
     fh.close()
 

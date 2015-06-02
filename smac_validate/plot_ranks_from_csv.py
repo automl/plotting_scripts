@@ -1,17 +1,15 @@
 #!/usr/bin/env python
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from collections import OrderedDict
 import csv
-import itertools
 import scipy.stats
 import sys
 
-from matplotlib.pyplot import tight_layout, figure, subplots_adjust, subplot, savefig, show
-import matplotlib.gridspec
 import numpy as np
 
-import load_data
+import plot_util
 import merge_test_performance_different_times as merge
+import plot_test_performance_from_csv
 
 
 def calculate_ranking(performances, estimators, bootstrap_samples=500):
@@ -52,112 +50,13 @@ def calculate_ranking(performances, estimators, bootstrap_samples=500):
     return list(np.transpose(ranking)), estimators
 
 
-def plot_optimization_trace(time_list, performance_list, title, name_list,
-                            logy=False, logx=False, save="",
-                            y_min=None, y_max=None, x_min=None, x_max=None):
-    markers = itertools.cycle(['o', 'x', '^', '*'])
-    colors = itertools.cycle(["#e41a1c",    # Red
-                              "#377eb8",    # Blue
-                              "#4daf4a",    # Green
-                              "#984ea3",    # Purple
-                              "#ff7f00",    # Orange
-                              "#ffff33",    # Yellow
-                              "#a65628",    # Brown
-                              "#f781bf",    # Pink
-                              "#999999"])   # Grey
-    linestyles = '-'
-    size = 1
-
-    # Set up figure
-    ratio = 5
-    gs = matplotlib.gridspec.GridSpec(ratio, 1)
-    fig = figure(1, dpi=100)
-    fig.suptitle(title, fontsize=16)
-    ax1 = subplot(gs[0:ratio, :])
-    ax1.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
-
-    auto_y_min = sys.maxint
-    auto_y_max = -sys.maxint
-    auto_x_min = sys.maxint
-    auto_x_max = -sys.maxint
-
-    for idx, performance in enumerate(performance_list):
-        color = colors.next()
-        marker = markers.next()
-        if logy:
-            performance = np.log10(performance)
-        if logx and time_list[idx][0] == 0:
-            time_list[idx][0] = 10**-5
-
-        mean = np.mean(performance, axis=0)
-        std = np.std(performance, axis=0)
-        # Plot mean and std
-        ax1.fill_between(time_list[idx], mean-std, mean+std,
-                         facecolor=color, alpha=0.3, edgecolor=color)
-        ax1.plot(time_list[idx], mean, color=color, linewidth=size,
-                 linestyle=linestyles, marker=marker, label=name_list[idx])
-
-        # Get limits
-        # For y_min we always take the lowest value
-        auto_y_min = min(min(mean-std[x_min:]), auto_y_min)
-        auto_y_max = max(max(mean+std[x_min:]), auto_y_max)
-
-        auto_x_min = min(time_list[idx][0], auto_x_min)
-        auto_x_max = max(time_list[idx][-1], auto_x_max)
-
-    # Describe axes
-    if logy:
-        ax1.set_ylabel("log10(Average Rank)")
-    else:
-        ax1.set_ylabel("average rank")
-
-    if logx:
-        ax1.set_xlabel("log10(time) [sec]")
-        ax1.set_xscale("log")
-        auto_x_min = max(0.1, auto_x_min)
-    else:
-        ax1.set_xlabel("time [sec]")
-
-    leg = ax1.legend(loc='best', fancybox=True)
-    leg.get_frame().set_alpha(0.5)
-
-    # Set axes limits
-    if y_max is None and y_min is not None:
-        ax1.set_ylim([y_min, auto_y_max + 0.01*abs(auto_y_max - y_min)])
-    elif y_max is not None and y_min is None:
-        ax1.set_ylim([auto_y_min - 0.01*abs(auto_y_max - y_min), y_max])
-    elif y_max > y_min and y_max is not None and y_min is not None:
-        ax1.set_ylim([y_min, y_max])
-    else:
-        ax1.set_ylim([auto_y_min - 0.01*abs(auto_y_max - auto_y_min),
-                      auto_y_max + 0.01*abs(auto_y_max - auto_y_min)])
-
-    if x_max is None and x_min is not None:
-        ax1.set_xlim([x_min - 0.1*abs(x_min), auto_x_max + 0.1*abs(auto_x_max)])
-    elif x_max is not None and x_min is None:
-        ax1.set_xlim([auto_x_min - 0.1*abs(auto_x_min), x_max + 0.1*abs(x_max)])
-    elif x_max > x_min and x_max is not None and x_min is not None:
-        ax1.set_xlim([x_min, x_max])
-    else:
-        ax1.set_xlim([auto_x_min, auto_x_max + 0.1*abs(auto_x_min - auto_x_max)])
-
-    # Save or show
-    tight_layout()
-    subplots_adjust(top=0.85)
-    if save != "":
-        savefig(save, dpi=100, facecolor='w', edgecolor='w',
-                orientation='portrait', papertype=None, format=None,
-                transparent=False, pad_inches=0.1)
-    else:
-        show()
-
-
 def main():
     prog = "python plot_ranks_from_csv.py <Dataset> <model> " \
            "*.csv ... "
     description = "Plot ranks over different datasets"
 
-    parser = ArgumentParser(description=description, prog=prog)
+    parser = ArgumentParser(description=description, prog=prog,
+                            formatter_class=ArgumentDefaultsHelpFormatter)
 
     # General Options
     parser.add_argument("--logy", action="store_true", dest="logy",
@@ -183,6 +82,13 @@ def main():
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true",
                         default=False, help="print number of runs on plot")
 
+    # Properties
+    # We need this to show defaults for -h
+    defaults = plot_util.get_defaults()
+    for key in defaults:
+        parser.add_argument("--%s" % key, dest=key, default=None,
+                            help="%s, default: %s" % (key, str(defaults[key])))
+
     args, unknown = parser.parse_known_args()
 
     sys.stdout.write("\nFound " + str(len(unknown)) + " arguments\n")
@@ -193,11 +99,11 @@ def main():
         sys.exit(1)
 
     # Get files and names
-    file_list, name_list = load_data.get_file_and_name_list(unknown,
+    file_list, name_list = plot_util.get_file_and_name_list(unknown,
                                                             match_file='.csv',
                                                             len_name=2)
     for idx in range(len(name_list)):
-        assert len(file_list[idx]) == 1
+        assert len(file_list[idx]) == 1, "%s" % file_list[idx]
         print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))
 
     dataset_dict = OrderedDict()
@@ -295,18 +201,20 @@ def main():
         for ide, est in enumerate(estimator_list):
             performance_list[ide].append(p[idd*(len(estimator_list))+ide])
 
-    save = ""
-    if args.save != "":
-        save = args.save
-        print "Save to %s" % args.save
-    else:
-        print "Show"
-    plot_optimization_trace(time_list=time_list, performance_list=performance_list,
-                            title=args.title, name_list=estimator_list,
-                            logy=args.logy, logx=args.logx, save=save,
-                            y_min=args.ymin, y_max=args.ymax, x_min=args.xmin,
-                            x_max=args.xmax)
 
+    prop = {}
+    args_dict = vars(args)
+    for key in defaults:
+        prop[key] = args_dict[key]
+
+    plot_test_performance_from_csv.\
+        plot_optimization_trace(time_list=time_list,
+                                performance_list=performance_list,
+                                title=args.title, name_list=estimator_list,
+                                logy=args.logy, logx=args.logx, save=args.save,
+                                y_min=args.ymin, y_max=args.ymax, x_min=args.xmin,
+                                x_max=args.xmax, ylabel="average rank", scale_std=0,
+                                properties=prop)
 
 if __name__ == "__main__":
     main()

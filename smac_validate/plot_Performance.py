@@ -9,7 +9,7 @@ from matplotlib.pyplot import tight_layout, figure, subplots_adjust, subplot, sa
 import matplotlib.gridspec
 import numpy as np
 
-import load_data
+import plot_util
 
 
 def plot_optimization_trace(times, performance_list, title, name_list, log=False, save="",
@@ -160,7 +160,7 @@ def main():
         sys.exit(1)
 
     # Get files and names
-    file_list, name_list = load_data.get_file_and_name_list(unknown, match_file='.csv')
+    file_list, name_list = plot_util.get_file_and_name_list(unknown, match_file='.csv')
     for idx in range(len(name_list)):
         print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))
 
@@ -176,7 +176,7 @@ def main():
         # We have a new experiment
         performance.append(list())
         for fl in file_list[name]:
-            _none, csv_data = load_data.read_csv(fl, has_header=True)
+            _none, csv_data = plot_util.read_csv(fl, has_header=True)
             csv_data = np.array(csv_data)
             # Replace too high values with args.maxint
             if args.train:

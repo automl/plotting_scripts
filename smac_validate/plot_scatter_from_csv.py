@@ -8,7 +8,7 @@ from matplotlib.pyplot import tight_layout, figure, subplots_adjust, subplot, sa
 import matplotlib.gridspec
 import numpy as np
 
-import load_data
+import plot_util
 import plot_scatter
 
 def main():
@@ -66,7 +66,7 @@ def main():
     columns = [i-1 for i in columns]
 
     # Load validationResults
-    res_header, res_data = load_data.read_csv(unknown[0], has_header=True, data_type=np.float)
+    res_header, res_data = plot_util.read_csv(unknown[0], has_header=True, data_type=np.float)
     res_data = np.array(res_data)
     print "Found %s points" % (str(res_data.shape))
 

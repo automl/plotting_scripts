@@ -10,7 +10,7 @@ import matplotlib.gridspec
 import numpy as np
 from matplotlib.ticker import FormatStrFormatter
 
-import load_data
+import plot_util
 
 
 def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
@@ -305,7 +305,7 @@ def main():
         sys.exit(1)
 
     # Load validationResults
-    res_header, res_data = load_data.read_csv(args.res, has_header=True)
+    res_header, res_data = plot_util.read_csv(args.res, has_header=True)
     av_times = [float(row[0]) for row in res_data]
     if args.time == None:
         # Print available times and quit
@@ -336,7 +336,7 @@ def main():
     config_1 = config_1[0]
     config_2 = config_2[0]
 
-    obj_header, obj_data = load_data.read_csv(args.obj, has_header=True)
+    obj_header, obj_data = plot_util.read_csv(args.obj, has_header=True)
     head_template = '"Objective of validation config #%s"'
     idx_1 = obj_header.index(head_template % config_1)
     idx_2 = obj_header.index(head_template % config_2)

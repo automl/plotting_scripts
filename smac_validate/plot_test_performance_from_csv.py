@@ -26,7 +26,7 @@ def plot_optimization_trace(time_list, performance_list, name_list, title=None,
     # Set up figure
     ratio = 5
     gs = matplotlib.gridspec.GridSpec(ratio, 1)
-    fig = figure(1, dpi=int(properties['dpi']))
+    fig = figure(1, dpi=int(properties['dpi'])) #, figsize=(8, 4))
     ax1 = subplot(gs[0:ratio, :])
     ax1.grid(True, linestyle='-', which='major', color=properties["gridcolor"],
              alpha=float(properties["gridalpha"]))
@@ -43,18 +43,12 @@ def plot_optimization_trace(time_list, performance_list, name_list, title=None,
         color = properties["colors"].next()
         marker = properties["markers"].next()
         linestyle = properties["linestyles"].next()
-        # Modify for NIPS2015
-        if name_list[idx] == "jointspace":
-            color = "k"
-        name_list[idx] = name_list[idx].replace("_", " ").\
-            replace("gaussian", "Gaussian").\
-            replace("k nearest neighbors", "kNN").\
-            replace("jointspace", "joint space")
+        name_list[idx] = name_list[idx].replace("_", " ")
 
         if logy:
             performance = np.log10(performance)
         if logx and time_list[idx][0] == 0:
-            time_list[idx][0] = 10**0
+            time_list[idx][0] = 10**-1
 
         mean = np.mean(performance, axis=0)
         std = np.std(performance, axis=0)*scale_std
@@ -113,7 +107,7 @@ def plot_optimization_trace(time_list, performance_list, name_list, title=None,
 
     # Save or show
     tight_layout()
-    subplots_adjust(top=0.85)
+    #subplots_adjust(top=0.85)
     if save != "":
         print "Save plot to %s" % save
         savefig(save, dpi=int(properties['dpi']), facecolor='w', edgecolor='w',

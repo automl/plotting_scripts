@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import csv
 import os
 import itertools
@@ -15,7 +14,7 @@ def get_plot_markers():
 
 
 def get_plot_linestyles():
-    return itertools.cycle(['-', '--', '-.', '--.', ':', ])
+    return itertools.cycle(['-', '--', '-.', ':', ])
 
 
 def get_single_linestyle():
@@ -24,7 +23,8 @@ def get_single_linestyle():
 
 def get_plot_colors():
     # color brewer, 2nd qualitative 9 color scheme (http://colorbrewer2.org/)
-    return itertools.cycle(["#e41a1c",    # Red
+    return itertools.cycle(["#000000",    # Black
+                            "#e41a1c",    # Red
                             "#377eb8",    # Blue
                             "#4daf4a",    # Green
                             "#984ea3",    # Purple
@@ -32,7 +32,8 @@ def get_plot_colors():
                             "#ffff33",    # Yellow
                             "#a65628",    # Brown
                             "#f781bf",    # Pink
-                            "#999999"])   # Grey
+                            "#999999",    # Grey
+                            ])
 
 
 def get_defaults():

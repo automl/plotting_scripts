@@ -6,6 +6,7 @@ import scipy.stats
 import sys
 
 import numpy as np
+import itertools
 
 import plot_util
 import merge_test_performance_different_times as merge
@@ -81,6 +82,8 @@ def main():
                         help="Replace all values higher than this?")
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true",
                         default=False, help="print number of runs on plot")
+    parser.add_argument("--samples", dest="samples", type=int,
+                        default=1000, help="Number of bootstrap samples to plot")
 
     # Properties
     # We need this to show defaults for -h
@@ -180,7 +183,7 @@ def main():
     time_list = list()
     for dataset in dataset_list:
         ranking, e_list = calculate_ranking(performances=dataset_dict[dataset],
-                                            estimators=estimator_list)
+                                            estimators=estimator_list, bootstrap_samples=args.samples)
         ranking_list.extend(ranking)
         assert len(e_list) == len(estimator_list)
         time_list.extend([dataset_dict[dataset]["time"] for i in range(len(e_list))])
@@ -206,15 +209,18 @@ def main():
     args_dict = vars(args)
     for key in defaults:
         prop[key] = args_dict[key]
+    #prop['linestyles'] = itertools.cycle(["-", ":"])
+
 
     plot_test_performance_from_csv.\
         plot_optimization_trace(time_list=time_list,
                                 performance_list=performance_list,
                                 title=args.title, name_list=estimator_list,
                                 logy=args.logy, logx=args.logx, save=args.save,
-                                y_min=args.ymin, y_max=args.ymax, x_min=args.xmin,
-                                x_max=args.xmax, ylabel="average rank", scale_std=0,
-                                properties=prop)
+                                y_min=args.ymin, y_max=args.ymax,
+                                x_min=args.xmin, x_max=args.xmax,
+                                ylabel="average rank (%d bootstrap samples)" % args.samples,
+                                scale_std=0, properties=prop)
 
 if __name__ == "__main__":
     main()

@@ -82,6 +82,8 @@ def main():
                         help="Replace all values higher than this?")
     parser.add_argument("--save", dest="saveTo", type=str,
                         required=True, help="Where to save the csv?")
+    parser.add_argument("--train", dest="train", default=False,
+                        action="store_true", help="Merge train error")
 
     args, unknown = parser.parse_known_args()
 
@@ -116,7 +118,9 @@ def main():
         csv_data = np.array(csv_data)
         # Replace too high values with args.maxint
         testdata = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 2]]
-        #traindata = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 1]]
+        if args.train:
+            traindata = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 1]]
+            testdata = traindata
         time_steps = [float(i.strip()) for i in csv_data[:, 0]]
         assert time_steps[0] == 0
 

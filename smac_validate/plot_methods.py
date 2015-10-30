@@ -151,6 +151,8 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
     auto_x_max = -sys.maxint
 
     for idx, performance in enumerate(performance_list):
+        performance = np.array(performance)
+
         color = properties["colors"].next()
         marker = properties["markers"].next()
         linestyle = properties["linestyles"].next()
@@ -160,21 +162,21 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
             performance = np.log10(performance)
         if logx and time_list[idx][0] == 0:
             time_list[idx][0] = 10**-1
+
         if agglomeration == "mean":
             mean = np.mean(performance, axis=0)
-            std_lo = np.std(performance, axis=0)*scale_std
-            std_up = std_lo
+            lower = mean + np.std(performance, axis=0)*scale_std
+            upper = mean - np.std(performance, axis=0)*scale_std
         elif agglomeration == "median":
-            mean = np.median(performance, axis=0)
-            std_lo = np.percentile(performance, q=75, axis=0)*scale_std
-            std_up = np.percentile(performance, q=25, axis=0)*scale_std
+            lower = np.percentile(performance, axis=0, q=25)
+            upper = np.percentile(performance, axis=0, q=75)
         else:
-            raise ValueError("'agglomeration' is not in ('mean', 'median')")
+            raise ValueError("Unknown agglomeration: %s" % agglomeration)
 
         # Plot mean and std
         if scale_std >= 0 and len(performance) > 1:
-            ax1.fill_between(time_list[idx], mean-std_lo, mean+std_up,
-                             facecolor=color, alpha=0.3, edgecolor=color)
+            ax1.fill_between(time_list[idx], lower, upper, facecolor=color,
+                             alpha=0.3, edgecolor=color)
         ax1.plot(time_list[idx], mean, color=color,
                  linewidth=int(properties["linewidth"]), linestyle=linestyle,
                  marker=marker, markersize=int(properties["markersize"]),

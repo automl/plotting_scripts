@@ -27,14 +27,18 @@ def main():
                         default=None, help="Maximum of the x-axis")
     parser.add_argument("--xmin", dest="xmin", type=float,
                         default=None, help="Minimum of the x-axis")
-    parser.add_argument("-s", "--save", dest="save",
-                        default="", help="Where to save plot instead of showing it?")
-    parser.add_argument("-t", "--title", dest="title",
-                        default="", help="Optional supertitle for plot")
+    parser.add_argument("-s", "--save", dest="save", default="",
+                        help="Where to save plot instead of showing it?")
+    parser.add_argument("-t", "--title", dest="title", default="",
+                        help="Optional supertitle for plot")
     parser.add_argument("--maxvalue", dest="maxvalue", type=float,
-                        default=sys.maxint, help="Replace all values higher than this?")
-    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
-                        help="print number of runs on plot")
+                        default=sys.maxint,
+                        help="Replace all values higher than this?")
+    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true",
+                        default=False, help="print number of runs on plot")
+    parser.add_argument("--agglomeration", dest="agglomeration", type=str,
+                        default="mean", help="Show mean or median",
+                        choices=("mean", "median"))
 
     args, unknown = parser.parse_known_args()
 
@@ -46,7 +50,7 @@ def main():
         sys.exit(1)
 
     # Get files and names
-    file_list, name_list = plot_util.get_file_and_name_list(unknown, match_file=".txt")
+    file_list, name_list = plot_util.get_file_and_name_list(unknown, match_file=".")
     for idx in range(len(name_list)):
         print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))
 
@@ -104,6 +108,7 @@ def main():
                                                   title=args.title,
                                                   name_list=name_list,
                                                   logx=args.log, logy=False,
+                                                  agglomeration=args.agglomeration,
                                                   save=save,
                                                   y_min=args.ymin,
                                                   y_max=args.ymax,

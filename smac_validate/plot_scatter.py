@@ -63,11 +63,11 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     else:
         auto_min_val = min([min(x_data), min(y_data)])
     auto_max_val = maximum_value
-    timeout_val = maximum_value *2 #+ 10**int((np.log10(max_val)))
+    timeout_val = maximum_value * 2 #+ 10**int((np.log10(max_val)))
 
     # Plot angle bisector and reference_lines
     out_up = auto_max_val
-    out_lo = auto_min_val
+    out_lo = max(10**-6, auto_min_val)
 
     ax1.plot([out_lo, out_up], [out_lo, out_up], c=c_angle_bisector)
 
@@ -287,10 +287,14 @@ def main():
                         default=None, help="Plot X speedup/slowdown, format 'X,..,X' (no spaces)")
     parser.add_argument("--time", dest="time", default=None,
                         help="Plot config at which time?, format 'time1,time2' ")
-    parser.add_argument("--obj", dest="obj", default=None,
+    parser.add_argument("--obj", dest="obj", default=None, required=True,
                         help="Path to validationObjectiveMatrix-traj-run-* file")
     parser.add_argument("--res", dest="res", required=True,
                         help="Path to validationResults-traj-run-* file")
+    parser.add_argument("--minvalue", dest="minvalue", type=float,
+                        help="Replace all values smaller than this",)
+    parser.add_argument("--fontsize", dest="fontsize", type=int, default=20,
+                        help="Use this fontsize for plotting",)
 
     args, unknown = parser.parse_known_args()
 
@@ -320,11 +324,6 @@ def main():
         sys.exit(0)
     time_1 = float(time_arr[0])
     time_2 = float(time_arr[1])
-
-    if args.obj == None:
-        print "Missing --obj"
-        parser.print_help()
-        sys.exit(1)
 
     # Now extract data
     config_1 = [int(float(row[len(res_header)-2].strip('"'))) for row in res_data if int(float(row[0])) == int(time_1)]
@@ -365,15 +364,23 @@ def main():
     time_1 = res_data[times.index(int(time_1))][0]
     time_2 = res_data[times.index(int(time_2))][0]
 
+    data_one = np.array([max(args.minvalue, i) for i in data_one])
+    data_two = np.array([max(args.minvalue, i) for i in data_two])
+
     save = ""
     if args.save != "":
         save = args.save
         print "Save to %s" % args.save
     else:
         print "Show"
-    plot_scatter_plot(x_data=data_one, y_data=data_two, labels=[label_template % (config_1, str(time_1)), label_template % (config_2, str(time_2))], title=args.title, save=save,
-                      max_val=args.max, min_val=args.min, grey_factor=args.grey_factor,
-                      linefactors=linefactors, debug=args.verbose)
+    plot_scatter_plot(x_data=data_one, y_data=data_two,
+                      labels=[label_template % (config_1, str(time_1)),
+                              label_template % (config_2, str(time_2))],
+                      title=args.title, save=save,
+                      max_val=args.max, min_val=args.min,
+                      grey_factor=args.grey_factor, linefactors=linefactors,
+                      user_fontsize=args.fontsize,
+                      debug=args.verbose)
 
 
 if __name__ == "__main__":

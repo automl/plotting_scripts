@@ -32,6 +32,9 @@ def main():
                         default="", help="Optional supertitle for plot")
     parser.add_argument("--maxvalue", dest="maxvalue", type=float,
                         default=sys.maxint, help="Replace all values higher than this?")
+    parser.add_argument("--agglomeration", dest="agglomeration", type=str,
+                        default="median", choices=("median", "mean"),
+                        help="Plot mean or median")
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
                         help="print number of runs on plot")
     group = parser.add_mutually_exclusive_group()
@@ -103,12 +106,29 @@ def main():
         print "Save to %s" % args.save
     else:
         print "Show"
-    plot_methods.plot_optimization_trace(times=time_,
-                                         performance_list=performance,
-                                         title=args.title, name_list=name_list,
-                                         log=args.log, save=save,
-                                         y_min=args.ymin, y_max=args.ymax,
-                                         x_min=args.xmin, x_max=args.xmax)
+
+    if args.agglomeration == "median":
+        plot_methods.plot_optimization_trace(times=time_,
+                                             performance_list=performance,
+                                             title=args.title,
+                                             name_list=name_list,
+                                             log=args.log, save=save,
+                                             y_min=args.ymin, y_max=args.ymax,
+                                             x_min=args.xmin, x_max=args.xmax)
+    else:
+        # This plotting function requires one time array for each experiment
+        new_time_list = [time_ for i in range(len(performance))]
+        plot_methods.plot_optimization_trace_mult_exp(time_list=new_time_list,
+                                                      performance_list=performance,
+                                                      title=args.title,
+                                                      name_list=name_list,
+                                                      logx=True, logy=args.log,
+                                                      save=save,
+                                                      y_min=args.ymin,
+                                                      y_max=args.ymax,
+                                                      x_min=args.xmin,
+                                                      x_max=args.xmax,
+                                                      agglomeration="mean")
 
 if __name__ == "__main__":
     main()

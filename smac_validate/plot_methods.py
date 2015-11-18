@@ -85,7 +85,7 @@ def plot_optimization_trace(times, performance_list, title, name_list,
         ax1.set_ylabel("log10(Performance)")
     else:
         ax1.set_ylabel("Performance")
-    ax1.set_xlabel("log10(time) [sec]")
+    ax1.set_xlabel("time [sec]")
 
     leg = ax1.legend(loc='best', fancybox=True)
     leg.get_frame().set_alpha(0.5)
@@ -127,6 +127,7 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
                                      y_max=None, x_min=None, x_max=None,
                                      ylabel="Performance", scale_std=1,
                                      agglomeration="mean"):
+
     # complete properties
     if properties is None:
         properties = dict()
@@ -164,10 +165,11 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
             time_list[idx][0] = 10**-1
 
         if agglomeration == "mean":
-            mean = np.mean(performance, axis=0)
-            lower = mean + np.std(performance, axis=0)*scale_std
-            upper = mean - np.std(performance, axis=0)*scale_std
+            m = np.mean(performance, axis=0)
+            lower = m + np.std(performance, axis=0)*scale_std
+            upper = m - np.std(performance, axis=0)*scale_std
         elif agglomeration == "median":
+            m = np.median(performance, axis=0)
             lower = np.percentile(performance, axis=0, q=25)
             upper = np.percentile(performance, axis=0, q=75)
         else:
@@ -177,7 +179,7 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
         if scale_std >= 0 and len(performance) > 1:
             ax1.fill_between(time_list[idx], lower, upper, facecolor=color,
                              alpha=0.3, edgecolor=color)
-        ax1.plot(time_list[idx], mean, color=color,
+        ax1.plot(time_list[idx], m, color=color,
                  linewidth=int(properties["linewidth"]), linestyle=linestyle,
                  marker=marker, markersize=int(properties["markersize"]),
                  label=name_list[idx],
@@ -185,8 +187,8 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
 
         # Get limits
         # For y_min we always take the lowest value
-        auto_y_min = min(min(mean[x_min:]-std_lo[x_min:]), auto_y_min)
-        auto_y_max = max(max(mean[x_min:]+std_up[x_min:]), auto_y_max)
+        auto_y_min = min(min(m[x_min:]-lower[x_min:]), auto_y_min)
+        auto_y_max = max(max(m[x_min:]+upper[x_min:]), auto_y_max)
 
         auto_x_min = min(time_list[idx][0], auto_x_min)
         auto_x_max = max(time_list[idx][-1], auto_x_max)
@@ -198,11 +200,9 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
         ax1.set_ylabel("%s" % ylabel, fontsize=properties["labelfontsize"])
 
     if logx:
-        ax1.set_xlabel("log10(time) [sec]", fontsize=properties["labelfontsize"])
         ax1.set_xscale("log")
         auto_x_min = max(0.1, auto_x_min)
-    else:
-        ax1.set_xlabel("time [sec]")
+    ax1.set_xlabel("time [sec]")
 
     leg = ax1.legend(loc='best', fancybox=True, prop={'size': int(properties["legendsize"])})
     leg.get_frame().set_alpha(0.5)

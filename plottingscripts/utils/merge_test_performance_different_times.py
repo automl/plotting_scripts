@@ -1,12 +1,10 @@
-#!/usr/bin/env python
-
 from argparse import ArgumentParser
 import csv
 import sys
 
 import numpy as np
 
-import plot_util
+import plottingscripts.utils.plot_util as plot_util
 
 
 def fill_trajectory(performance_list, time_list):

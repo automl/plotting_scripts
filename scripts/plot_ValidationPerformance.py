@@ -5,8 +5,8 @@ import sys
 
 import numpy as np
 
-import plot_util
-import plot_methods
+import plottingscripts.utils.plot_util as plot_util
+import plottingscripts.plotting.plot_methods as plot_methods
 
 
 def main():
@@ -100,35 +100,33 @@ def main():
     if args.xmin is None and show_from != 0:
         args.xmin = show_from
 
-    save = ""
-    if args.save != "":
-        save = args.save
-        print "Save to %s" % args.save
-    else:
-        print "Show"
-
     if args.agglomeration == "median":
-        plot_methods.plot_optimization_trace(times=time_,
-                                             performance_list=performance,
-                                             title=args.title,
-                                             name_list=name_list,
-                                             log=args.log, save=save,
-                                             y_min=args.ymin, y_max=args.ymax,
-                                             x_min=args.xmin, x_max=args.xmax)
+        fig = plot_methods.plot_optimization_trace(times=time_,
+                                                   performance_list=performance,
+                                                   title=args.title,
+                                                   name_list=name_list,
+                                                   log=args.log,
+                                                   y_min=args.ymin, y_max=args.ymax,
+                                                   x_min=args.xmin, x_max=args.xmax)
     else:
-        # This plotting function requires one time array for each experiment
+        # This plotting function requires a time array for each experiment
         new_time_list = [time_ for i in range(len(performance))]
-        plot_methods.plot_optimization_trace_mult_exp(time_list=new_time_list,
-                                                      performance_list=performance,
-                                                      title=args.title,
-                                                      name_list=name_list,
-                                                      logx=True, logy=args.log,
-                                                      save=save,
-                                                      y_min=args.ymin,
-                                                      y_max=args.ymax,
-                                                      x_min=args.xmin,
-                                                      x_max=args.xmax,
-                                                      agglomeration="mean")
+        fig = plot_methods.plot_optimization_trace_mult_exp(time_list=new_time_list,
+                                                            performance_list=performance,
+                                                            title=args.title,
+                                                            name_list=name_list,
+                                                            logx=True, logy=args.log,
+                                                            y_min=args.ymin,
+                                                            y_max=args.ymax,
+                                                            x_min=args.xmin,
+                                                            x_max=args.xmax,
+                                                            agglomeration="mean")
+
+    if args.save != "":
+        print "Save plot to %s" % args.save
+        plot_util.save_plot(fig, args.save, plot_util.get_defaults()['dpi'])
+    else:
+        fig.show()
 
 if __name__ == "__main__":
     main()

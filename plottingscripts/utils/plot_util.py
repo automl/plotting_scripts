@@ -1,8 +1,8 @@
-#!/usr/bin/env python
 import csv
 import os
 import itertools
 
+from matplotlib.pyplot import savefig, show
 
 def get_empty_iterator():
     return itertools.cycle([None])
@@ -114,3 +114,10 @@ def get_file_and_name_list(argument_list, match_file, len_name=1):
                 raise ValueError("%s is not a valid file" % argument_list[i])
 
     return file_list, name_list
+
+
+def save_plot(fig, save, dpi):
+    fig.tight_layout()
+    fig.savefig(save, dpi=dpi, facecolor='w', edgecolor='w',
+                orientation='portrait', papertype=None, format=None,
+                transparent=False, pad_inches=0.02, bbox_inches='tight')

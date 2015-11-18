@@ -5,9 +5,9 @@ import sys
 
 import numpy as np
 
-import plot_util
-import plot_methods
-import merge_test_performance_different_times
+import plottingscripts.utils.plot_util as plot_util
+import plottingscripts.plotting.plot_methods as plot_methods
+import plottingscripts.utils.merge_test_performance_different_times as merge_test_performance_different_times
 
 
 def main():
@@ -93,27 +93,25 @@ def main():
     if args.xmin is None and show_from != 0:
         args.xmin = show_from
 
-    save = ""
-    if args.save != "":
-        save = args.save
-        print "Save to %s" % args.save
-    else:
-        print "Show"
-
     print time_list[0].shape
     print performance_list[0][0].shape
 
-    plot_methods.plot_optimization_trace_mult_exp(time_list=time_list,
-                                                  performance_list=performance_list,
-                                                  title=args.title,
-                                                  name_list=name_list,
-                                                  logx=args.log, logy=False,
-                                                  agglomeration=args.agglomeration,
-                                                  save=save,
-                                                  y_min=args.ymin,
-                                                  y_max=args.ymax,
-                                                  x_min=args.xmin,
-                                                  x_max=args.xmax)
+    fig = plot_methods.plot_optimization_trace_mult_exp(time_list=time_list,
+                                                        performance_list=performance_list,
+                                                        title=args.title,
+                                                        name_list=name_list,
+                                                        logx=args.log, logy=False,
+                                                        agglomeration=args.agglomeration,
+                                                        y_min=args.ymin,
+                                                        y_max=args.ymax,
+                                                        x_min=args.xmin,
+                                                        x_max=args.xmax)
+
+    if args.save != "":
+        print "Save plot to %s" % args.save
+        plot_util.save_plot(fig, args.save, plot_util.get_defaults()['dpi'])
+    else:
+        fig.show()
 
 if __name__ == "__main__":
     main()

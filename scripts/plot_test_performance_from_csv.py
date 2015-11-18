@@ -5,8 +5,8 @@ import csv
 import itertools
 import sys
 
-import plot_util
-import plot_methods
+import plottingscripts.utils.plot_util as plot_util
+import plottingscripts.plotting.plot_methods as plot_methods
 
 
 def main():
@@ -92,20 +92,23 @@ def main():
     for key in defaults:
         prop[key] = args_dict[key]
 
-    plot_methods.plot_optimization_trace_mult_exp(time_list=times,
-                                                  performance_list=performances,
-                                                  title=args.title,
-                                                  name_list=name_list,
-                                                  ylabel=args.ylabel,
-                                                  logy=args.logy,
-                                                  logx=args.logx,
-                                                  save=args.save,
-                                                  y_min=args.ymin,
-                                                  y_max=args.ymax,
-                                                  x_min=args.xmin,
-                                                  x_max=args.xmax,
-                                                  properties=prop, scale_std=1)
-
+    fig = plot_methods.plot_optimization_trace_mult_exp(time_list=times,
+                                                        performance_list=performances,
+                                                        title=args.title,
+                                                        name_list=name_list,
+                                                        ylabel=args.ylabel,
+                                                        logy=args.logy,
+                                                        logx=args.logx,
+                                                        y_min=args.ymin,
+                                                        y_max=args.ymax,
+                                                        x_min=args.xmin,
+                                                        x_max=args.xmax,
+                                                        properties=prop, scale_std=1)
+    if args.save != "":
+        print "Save plot to %s" % args.save
+        plot_util.save_plot(fig, args.save, plot_util.get_defaults()['dpi'])
+    else:
+        fig.show()
 
 if __name__ == "__main__":
     main()

@@ -5,11 +5,11 @@ from matplotlib.pyplot import tight_layout, figure, subplots_adjust, subplot, sa
 import matplotlib.gridspec
 import numpy as np
 
-import plot_util
+import plottingscripts.utils.plot_util as plot_util
 
 
 def plot_optimization_trace(times, performance_list, title, name_list,
-                            log=False, save="", y_min=None, y_max=None,
+                            log=False, y_min=None, y_max=None,
                             x_min=None, x_max=None):
     '''
     plots a median optimization trace based one time array
@@ -110,20 +110,12 @@ def plot_optimization_trace(times, performance_list, title, name_list,
     else:
         ax1.set_xlim([auto_x_min - 0.1*abs(auto_x_min), auto_x_max + 0.1*abs(auto_x_max)])
 
-    # Save or show
-    tight_layout()
-    subplots_adjust(top=0.85)
-    if save != "":
-        savefig(save, dpi=100, facecolor='w', edgecolor='w',
-                orientation='portrait', papertype=None, format=None,
-                transparent=False, pad_inches=0.1)
-    else:
-        show()
+    return fig
 
 
 def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
                                      title=None, logy=False, logx=False,
-                                     save="", properties=None, y_min=None,
+                                     properties=None, y_min=None,
                                      y_max=None, x_min=None, x_max=None,
                                      ylabel="Performance", scale_std=1,
                                      agglomeration="mean"):
@@ -226,13 +218,4 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
     else:
         ax1.set_xlim([auto_x_min, auto_x_max + 0.1*abs(auto_x_min - auto_x_max)])
 
-    # Save or show
-    tight_layout()
-    #subplots_adjust(top=0.85)
-    if save != "":
-        print "Save plot to %s" % save
-        savefig(save, dpi=int(properties['dpi']), facecolor='w', edgecolor='w',
-                orientation='portrait', papertype=None, format=None,
-                transparent=False, pad_inches=0.1)
-    else:
-        show()
+    return fig

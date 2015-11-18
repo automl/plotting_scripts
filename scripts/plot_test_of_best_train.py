@@ -8,7 +8,7 @@ from matplotlib.pyplot import tight_layout, figure, subplots_adjust, subplot, sa
 import matplotlib.gridspec
 import numpy as np
 
-import plot_util
+import plottingscripts.utils.plot_util as plot_util
 
 
 def plot_optimization_trace(times, performance_list, title, min_test, max_test, name_list,
@@ -104,14 +104,7 @@ def plot_optimization_trace(times, performance_list, title, min_test, max_test, 
     leg.get_frame().set_alpha(0.5)
 
     # Save or show figure
-    tight_layout()
-    subplots_adjust(top=0.85)
-    if save != "":
-        savefig(save, dpi=100, facecolor='w', edgecolor='w',
-                orientation='portrait', papertype=None, format=None,
-                transparent=False, pad_inches=0.1)
-    else:
-        show()
+    return fig
 
 
 def get_test_of_best_train(train, test):
@@ -199,15 +192,18 @@ def main():
         min_test.append(np.min(test_performance[i], 0))
         max_test.append(np.max(test_performance[i], 0))
 
-    save = ""
+    fig = plot_optimization_trace(times=time_,
+                                  performance_list=test_of_best_train,
+                                  min_test=min_test, max_test=max_test,
+                                  name_list=name_list, title=args.title,
+                                  log=args.log,
+                                  y_min=args.ymin, y_max=args.ymax,
+                                  x_min=args.xmin, x_max=args.xmax)
     if args.save != "":
-        save = args.save
-        print "Save to %s" % args.save
+        print "Save plot to %s" % args.save
+        plot_util.save_plot(fig, args.save, plot_util.get_defaults()['dpi'])
     else:
-        print "Show"
-    plot_optimization_trace(times=time_, performance_list=test_of_best_train, min_test=min_test, max_test=max_test,
-                            name_list=name_list, title=args.title, log=args.log, save=save, y_min=args.ymin,
-                            y_max=args.ymax, x_min=args.xmin, x_max=args.xmax)
+        fig.show()
 
 if __name__ == "__main__":
     main()

@@ -12,6 +12,7 @@ setuptools.setup(
                       "scipy",
                       "matplotlib"
                       ],
+    test_requires=["mock"],
     test_suite='nose.collector',
     scripts=glob.glob(os.path.join('scripts', '*.py')),
     author='Katharina Eggensperger',

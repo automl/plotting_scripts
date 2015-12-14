@@ -16,6 +16,34 @@ import plot_util
 def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
                       min_val=None, max_val=1000, grey_factor=1, linefactors=None,
                       user_fontsize=20, dpi=100):
+    '''
+        method to generate a scatter plot 
+        Args:
+            x_data: numpy.array
+                performance values of one algorithm
+            y_data: numpy.array
+                performance values of the other algorithm
+            title: str 
+                title of plot
+            save: str
+                save plot to disk -- if not set, show plot
+            debug: bool
+                some debug options
+            min_val: float
+                minimal value to plot
+            max_val: float 
+                maximal value to plot
+            grey_factor: float
+                grey factor of points with a speedup of less 2
+            linefactors: list of floats
+                factors of speedups
+            user_fontsize: int
+                font size
+            dpi: int
+                resolution
+            
+    '''
+    
     regular_marker = 'x'
     timeout_marker = '+'
     grey_marker = '.'

@@ -5,7 +5,7 @@ import csv
 import itertools
 import sys
 
-import plottingscripts.utils.plot_util as plot_util
+from plottingscripts.utils import read_util, plot_util
 import plottingscripts.plotting.plot_methods as plot_methods
 
 
@@ -57,7 +57,7 @@ def main():
         sys.exit(1)
 
     # Get files and names
-    file_list, name_list = plot_util.get_file_and_name_list(unknown, match_file='.csv')
+    file_list, name_list = read_util.get_file_and_name_list(unknown, match_file='.csv')
     for idx in range(len(name_list)):
         assert len(file_list[idx]) == 1, "%s" % str(file_list[idx])
         print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))

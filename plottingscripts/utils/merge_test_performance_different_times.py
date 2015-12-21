@@ -4,7 +4,7 @@ import sys
 
 import numpy as np
 
-import plottingscripts.utils.plot_util as plot_util
+import plottingscripts.utils.read_util as plot_util
 
 
 def fill_trajectory(performance_list, time_list):
@@ -23,15 +23,21 @@ def fill_trajectory(performance_list, time_list):
         low_idx = np.argmin(t_list)
         if t_list[low_idx] == sys.maxint:
             break
-        del t_list
+        del t_list, i
 
+        low_time = time_list[low_idx][time_idx[low_idx]]
         # Append time to the list for this exp
-        exp_time.append(time_list[low_idx][time_idx[low_idx]])
+        exp_time.append(low_time)
+        if exp_time[-1] < exp_time[-1]:
+            raise ValueError()
 
         # Check whether there is any other exp with the same timestep
-        low_time = time_list[low_idx][time_idx[low_idx]]
         for idx in range(num_exp):
-            if time_list[idx][time_idx[idx]] == low_time:
+            # Sanity check
+            if time_list[idx][time_idx[idx]] < low_time and time_idx[idx] != -1:
+                raise ValueError("Something terribly wrong")
+
+            if time_list[idx][time_idx[idx]] == low_time and time_idx[idx] != -1:
                 time_idx[idx] += 1
                 perf_idx[idx] += 1
         del low_time

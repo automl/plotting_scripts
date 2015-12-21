@@ -4,15 +4,15 @@ from argparse import ArgumentParser
 import sys
 import itertools
 
-from matplotlib.pyplot import tight_layout, figure, subplots_adjust, subplot, savefig, show
+from matplotlib.pyplot import figure, subplot
 import matplotlib.gridspec
 import numpy as np
 
-import plottingscripts.utils.plot_util as plot_util
+from plottingscripts.utils import read_util, plot_util
 
 
 def plot_optimization_trace(times, performance_list, title, min_test, max_test, name_list,
-                            log=False, save="", y_min=None, y_max=None, x_min=None, x_max=None):
+                            log=False, y_min=None, y_max=None, x_min=None, x_max=None):
     markers = 'o'
     colors = itertools.cycle(["#e41a1c",    # Red
                               "#377eb8",    # Blue
@@ -149,7 +149,7 @@ def main():
     sys.stdout.write("Found " + str(len(unknown)) + " arguments\n")
 
     # Get files and names
-    file_list, name_list = plot_util.get_file_and_name_list(unknown, match_file='.csv')
+    file_list, name_list = read_util.get_file_and_name_list(unknown, match_file='.csv')
     for idx in range(len(name_list)):
         print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))
 
@@ -165,7 +165,7 @@ def main():
         train_performance.append(list())
         test_performance.append(list())
         for fl in file_list[name]:
-            _none, csv_data = plot_util.read_csv(fl, has_header=True)
+            _none, csv_data = read_util.read_csv(fl, has_header=True)
             csv_data = np.array(csv_data)
             # Replace too high values with args.maxint
             train_performance[-1].append([min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 1]])

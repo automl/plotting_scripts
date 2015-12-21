@@ -5,8 +5,9 @@ import sys
 
 import numpy as np
 
-import plottingscripts.utils.plot_util as plot_util
+from plottingscripts.utils import read_util, plot_util
 import plottingscripts.plotting.scatter as scatter
+
 
 def main():
     prog = "python plot_scatter.py any.csv"
@@ -63,7 +64,8 @@ def main():
     columns = [i-1 for i in columns]
 
     # Load validationResults
-    res_header, res_data = plot_util.read_csv(unknown[0], has_header=True, data_type=np.float)
+    res_header, res_data = read_util.read_csv(unknown[0], has_header=True,
+                                              data_type=np.float)
     res_data = np.array(res_data)
     print "Found %s points" % (str(res_data.shape))
 

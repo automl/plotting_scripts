@@ -7,8 +7,9 @@ import sys
 
 import numpy as np
 
-import plot_util
-import merge_test_performance_different_times as merge
+from plottingscripts.utils import read_util
+from plottingscripts.utils import plot_util
+import plottingscripts.utils.merge_test_performance_different_times as merge
 import plot_test_performance_from_csv
 
 
@@ -101,7 +102,7 @@ def main():
         sys.exit(1)
 
     # Get files and names
-    file_list, name_list = plot_util.get_file_and_name_list(unknown,
+    file_list, name_list = read_util.get_file_and_name_list(unknown,
                                                             match_file='.csv',
                                                             len_name=2)
     for idx in range(len(name_list)):

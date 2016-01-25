@@ -86,7 +86,7 @@ def main():
             show_from = max(data.count(args.maxvalue), show_from)
 
             performance.append(data)
-            time_.append([float(i.strip()) for i in csv_data[:, 2]])
+            time_.append([float(i.strip()) for i in csv_data[:, 0]])
         if len(time_) > 1:
             print len(time_)
             performance, time_ = merge_test_performance_different_times.\

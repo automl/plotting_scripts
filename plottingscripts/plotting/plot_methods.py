@@ -10,7 +10,7 @@ import plottingscripts.utils.plot_util as plot_util
 
 def plot_optimization_trace(times, performance_list, title, name_list,
                             log=False, y_min=None, y_max=None,
-                            x_min=None, x_max=None):
+                            x_min=None, x_max=None, ylabel="performance"):
     '''
     plots a median optimization trace based one time array
     '''
@@ -82,9 +82,9 @@ def plot_optimization_trace(times, performance_list, title, name_list,
 
     # Describe axes
     if log:
-        ax1.set_ylabel("log10(Performance)")
+        ax1.set_ylabel("log10(%s)" % ylabel)
     else:
-        ax1.set_ylabel("Performance")
+        ax1.set_ylabel("%s" % ylabel)
     ax1.set_xlabel("time [sec]")
 
     leg = ax1.legend(loc='best', fancybox=True)

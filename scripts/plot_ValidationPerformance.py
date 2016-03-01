@@ -26,6 +26,8 @@ def main():
                         default=None, help="Maximum of the x-axis")
     parser.add_argument("--xmin", dest="xmin", type=float,
                         default=None, help="Minimum of the x-axis")
+    parser.add_argument("--ylabel", dest="ylabel", default=None,
+                        help="Label on y-axis")
     parser.add_argument("-s", "--save", dest="save",
                         default="", help="Where to save plot instead of showing it?")
     parser.add_argument("-t", "--title", dest="title",
@@ -50,6 +52,12 @@ def main():
         parser.print_help()
         sys.exit(1)
 
+    if args.ylabel is None:
+        if args.train:
+            args.ylabel = "%s performance on train instances" % args.agglomeration
+        else:
+            args.ylabel = "%s performance on test instances" % args.agglomeration
+
     # Get files and names
     file_list, name_list = read_util.get_file_and_name_list(unknown, match_file='.csv')
     for idx in range(len(name_list)):
@@ -73,6 +81,7 @@ def main():
             if args.train:
                 data = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 1]]
             elif args.test:
+                ## print csv_data
                 data = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 2]]
             else:
                 print "This should not happen"
@@ -106,8 +115,11 @@ def main():
                                                    title=args.title,
                                                    name_list=name_list,
                                                    log=args.log,
-                                                   y_min=args.ymin, y_max=args.ymax,
-                                                   x_min=args.xmin, x_max=args.xmax)
+                                                   y_min=args.ymin,
+                                                   y_max=args.ymax,
+                                                   x_min=args.xmin,
+                                                   x_max=args.xmax,
+                                                   ylabel=args.ylabel)
     else:
         # This plotting function requires a time array for each experiment
         new_time_list = [time_ for i in range(len(performance))]
@@ -120,7 +132,8 @@ def main():
                                                             y_max=args.ymax,
                                                             x_min=args.xmin,
                                                             x_max=args.xmax,
-                                                            agglomeration="mean")
+                                                            agglomeration="mean",
+                                                            ylabel=args.ylabel)
 
     if args.save != "":
         print "Save plot to %s" % args.save

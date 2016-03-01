@@ -107,9 +107,9 @@ def main():
     if args.grey_factor > 1 and args.grey_factor not in linefactors:
         linefactors.append(args.grey_factor)
 
-    label_template = '#%20s at %s sec'
-    l1 = label_template % (os.path.basename(args.obj1)[:20], str(args.time))
-    l2 = label_template % (os.path.basename(args.obj2)[:20], str(args.time))
+    label_template = '%s %20s at %s sec'
+    l1 = label_template % ("obj1", os.path.basename(args.obj1)[:20], str(args.time))
+    l2 = label_template % ("obj2", os.path.basename(args.obj2)[:20], str(args.time))
 
     if args.minvalue is not None:
         print "Replace all values lower than %f" % args.minvalue

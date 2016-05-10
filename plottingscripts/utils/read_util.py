@@ -1,5 +1,6 @@
 import csv
 import os
+import re
 
 
 def read_csv(fn, has_header=True, data_type=str):
@@ -52,3 +53,70 @@ def get_file_and_name_list(argument_list, match_file, len_name=1):
                 raise ValueError("%s is not a valid file" % argument_list[i])
 
     return file_list, name_list
+
+
+def read_trajectory_file(fn):
+    """ COPIED FROM pySMAC, modified to work on validate over time file
+    Reads a trajectory file and returns a list of dicts with all the
+    information.
+
+    All values, like "Estimated Training Performance" and so on
+    are floats.
+
+    :param fn: name of file to read
+    :type fn: str
+
+    :returns: list of dicts -- every dict contains the keys:
+        "CPU Time Used", "Estimated Training Performance",
+        "Wallclock Time", "Incumbent ID","Automatic Configurator (CPU) Time", ..
+    """
+    return_list = []
+
+    with open(fn, 'r') as fh:
+        header = list(map(lambda s: s.strip('"'), fh.readline().split(",")))
+        l_info = len(header)-1
+        for line in fh.readlines():
+            tmp = line.split(",")
+            tmp_dict = {}
+            for i in range(l_info):
+                tmp_dict[header[i]] = float(tmp[i].strip().replace('"', ''))
+            return_list.append(tmp_dict)
+    return return_list
+
+
+def read_validationObjectiveMatrix_file(fn):
+    """ COPIED FROM pySMAC, modified
+    reads the run data of a validation run performed by SMAC.
+
+    For cases with instances, not necessarily every instance is used during the
+    configuration phase to estimate a configuration's performance. If validation
+    is enabled, SMAC reruns parameter settings (usually just the final
+    incumbent) on the whole instance set/a designated test set. The data from
+    those runs is stored in separate files. This function reads one of these
+    files.
+
+    :param fn: the name of the validationObjectiveMatrix file
+    :type fn: str
+
+    :returns: dict -- configuration ids as keys, list of performances on each
+    instance as values.
+
+    .. todo::
+       testing of validation runs where more than the final incumbent is
+       validated
+    """
+    values = {}
+
+    with open(fn, 'r') as fh:
+        header = fh.readline().split(",")
+        num_configs = len(header) - 2
+        re_string = '\w?,\w?'.join(['"(.*)"', '"(-?\d*)"'] +
+                                   ['"([0-9.]*)"'] * num_configs)
+        for line in fh.readlines():
+            match = (re.match(re_string, line))
+            if match.group(1) in values:
+                print("Cannot handle more than one seed per instance")
+            values[match.group(1)] = \
+                list(map(float,
+                         list(map(match.group, list(range(3, 3+num_configs))))))
+    return values

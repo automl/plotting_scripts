@@ -9,7 +9,7 @@ import plottingscripts.utils.plot_util as plot_util
 
 
 def plot_optimization_trace(times, performance_list, title, name_list,
-                            log=False, y_min=None, y_max=None,
+                            logx=True, logy=False, y_min=None, y_max=None,
                             x_min=None, x_max=None, ylabel="performance"):
     '''
     plots a median optimization trace based one time array
@@ -41,18 +41,20 @@ def plot_optimization_trace(times, performance_list, title, name_list,
 
     for idx, performance in enumerate(performance_list):
         color = colors.next()
-        # Get mean and std
-        if log:
-            performance = np.log10(performance)
 
         median = np.median(performance, axis=0)
         upper_quartile = np.percentile(performance, q=75, axis=0)
         lower_quartile = np.percentile(performance, q=25, axis=0)
+
+        if logy:
+            lower_quartile[lower_quartile < 0.01] = 0.01
+            median[median < 0.01] = 0.01
+
         # Plot mean and std
         ax1.fill_between(times, lower_quartile, upper_quartile,
                          facecolor=color, alpha=0.3, edgecolor=color)
         ax1.plot(times, median, color=color, linewidth=size,
-                 linestyle=linestyles, marker=markers, label=name_list[idx])
+                 linestyle=linestyles, marker=markers, label=name_list[idx].replace("_", " "))
 
         # Get limits
         # For y_min we always take the lowest value
@@ -81,17 +83,18 @@ def plot_optimization_trace(times, performance_list, title, name_list,
     auto_x_max = times[-1]
 
     # Describe axes
-    if log:
-        ax1.set_ylabel("log10(%s)" % ylabel)
-    else:
-        ax1.set_ylabel("%s" % ylabel)
+    ax1.set_ylabel("%s" % ylabel)
     ax1.set_xlabel("time [sec]")
 
     leg = ax1.legend(loc='best', fancybox=True)
     leg.get_frame().set_alpha(0.5)
 
     # Set axes limits
-    ax1.set_xscale("log")
+    if logx:
+        ax1.set_xscale("log")
+    if logy:
+        ax1.set_yscale("log")
+
     if y_max is None and y_min is not None:
         ax1.set_ylim([y_min, auto_y_max + 0.01*abs(auto_y_max - y_min)])
     elif y_max is not None and y_min is None:
@@ -151,8 +154,6 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
         linestyle = properties["linestyles"].next()
         name_list[idx] = name_list[idx].replace("_", " ")
 
-        if logy:
-            performance = np.log10(performance)
         if logx and time_list[idx][0] == 0:
             time_list[idx][0] = 10**-1
 
@@ -167,6 +168,9 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
         else:
             raise ValueError("Unknown agglomeration: %s" % agglomeration)
 
+        if logy:
+            lower[lower > 0.01] = 0.01
+
         # Plot mean and std
         if scale_std >= 0 and len(performance) > 1:
             ax1.fill_between(time_list[idx], lower, upper, facecolor=color,
@@ -179,17 +183,17 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
 
         # Get limits
         # For y_min we always take the lowest value
-        auto_y_min = min(min(m[x_min:]-lower[x_min:]), auto_y_min)
-        auto_y_max = max(max(m[x_min:]+upper[x_min:]), auto_y_max)
+        auto_y_min = min(min(lower[x_min:]), auto_y_min)
+        auto_y_max = max(max(upper[x_min:]), auto_y_max)
 
         auto_x_min = min(time_list[idx][0], auto_x_min)
         auto_x_max = max(time_list[idx][-1], auto_x_max)
 
     # Describe axes
     if logy:
-        ax1.set_ylabel("log10(%s)" % ylabel, fontsize=properties["labelfontsize"])
-    else:
-        ax1.set_ylabel("%s" % ylabel, fontsize=properties["labelfontsize"])
+        ax1.set_yscale("log")
+        auto_y_min = max(0.1, auto_y_min)
+    ax1.set_ylabel("%s" % ylabel, fontsize=properties["labelfontsize"])
 
     if logx:
         ax1.set_xscale("log")

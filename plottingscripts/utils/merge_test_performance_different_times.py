@@ -3,11 +3,40 @@ import csv
 import sys
 
 import numpy as np
+import pandas as pd
 
 import plottingscripts.utils.read_util as plot_util
 
 
-def fill_trajectory(performance_list, time_list):
+def fill_trajectory(performance_list, time_list, replace_nan=np.NaN):
+    frame_dict = dict()
+    counter = np.arange(0, len(performance_list))
+    for p, t, c in zip(performance_list, time_list, counter):
+        if len(p) != len(t):
+            raise ValueError("(%d) Array length mismatch: %d != %d" %
+                             (c, len(p), len(t)))
+        frame_dict[str(c)] = pd.Series(data=p, index=t)
+
+    merged = pd.DataFrame(frame_dict)
+    merged = merged.ffill()
+
+    print(merged.get_values())
+
+    performance = merged.get_values()
+    time_ = merged.index.values
+
+    performance[np.isnan(performance)] = replace_nan
+
+    if not np.isfinite(performance).all():
+        raise ValueError("\nCould not merge lists, because \n"
+                         "\t(a) one list is empty?\n"
+                         "\t(b) the lists do not start with the same times and"
+                         " replace_nan is not set?\n"
+                         "\t(c) any other reason.")
+
+
+
+    """ Replace the following with PandaFrames
     # Fill times
     len_exp = list([len(i) for i in performance_list])
     num_exp = len(performance_list)
@@ -70,6 +99,7 @@ def fill_trajectory(performance_list, time_list):
     # print "Performance", performance
     print "len(time)", len(time_)
     # print "Time steps", time_
+    """
     return performance, time_
 
 
@@ -94,7 +124,7 @@ def main():
     sys.stdout.write("\nFound " + str(len(unknown)) + " arguments\n")
 
     if len(unknown) < 1:
-        print "To less arguments given"
+        print("To less arguments given")
         parser.print_help()
         sys.exit(1)
 
@@ -105,7 +135,7 @@ def main():
     del arg_list
 
     for time_idx in range(len(name_list)):
-        print "%20s contains %d file(s)" % (name_list[time_idx], len(file_list[time_idx]))
+        print("%20s contains %d file(s)" % (name_list[time_idx], len(file_list[time_idx])))
     if len(file_list) > 1:
         sys.stderr.write("Cannot handle more than one experiment")
         parser.print_help()

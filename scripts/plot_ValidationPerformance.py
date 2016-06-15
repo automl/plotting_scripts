@@ -45,6 +45,12 @@ def main():
     group.add_argument('--train', dest="train",  default=False, action='store_true')
     group.add_argument('--test', dest="test", default=True, action='store_true')
 
+    # Properties
+    # We need this to show defaults for -h
+    defaults = plot_util.get_defaults()
+    for key in defaults:
+        parser.add_argument("--%s" % key, dest=key, default=None,
+                            help="%s, default: %s" % (key, str(defaults[key])))
     args, unknown = parser.parse_known_args()
 
     sys.stdout.write("\nFound " + str(len(unknown)) + " arguments\n")
@@ -59,6 +65,9 @@ def main():
             args.ylabel = "%s performance on train instances" % args.agglomeration
         else:
             args.ylabel = "%s performance on test instances" % args.agglomeration
+
+    # Set up properties
+
 
     # Get files and names
     file_list, name_list = read_util.get_file_and_name_list(unknown, match_file='.csv')
@@ -111,6 +120,11 @@ def main():
     if args.xmin is None and show_from != 0:
         args.xmin = show_from
 
+    prop = {}
+    args_dict = vars(args)
+    for key in defaults:
+        prop[key] = args_dict[key]
+
     if args.agglomeration == "median":
         fig = plot_methods.plot_optimization_trace(times=time_,
                                                    performance_list=performance,
@@ -122,7 +136,8 @@ def main():
                                                    y_max=args.ymax,
                                                    x_min=args.xmin,
                                                    x_max=args.xmax,
-                                                   ylabel=args.ylabel)
+                                                   ylabel=args.ylabel,
+                                                   properties=prop)
     else:
         # This plotting function requires a time array for each experiment
         new_time_list = [time_ for i in range(len(performance))]
@@ -130,7 +145,7 @@ def main():
                                                             performance_list=performance,
                                                             title=args.title,
                                                             name_list=name_list,
-                                                            logx=True, logy=args.log,
+                                                            logx=args.logx, logy=args.logy,
                                                             y_min=args.ymin,
                                                             y_max=args.ymax,
                                                             x_min=args.xmin,

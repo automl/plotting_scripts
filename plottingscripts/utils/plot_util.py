@@ -46,7 +46,8 @@ def get_defaults():
                "gridcolor": 'lightgrey',
                "gridalpha": 0.5,
                "dpi": 100,
-               "legendsize": 12
+               "legendsize": 12,
+               "ticklabelsize": 12
                }
     return default
 

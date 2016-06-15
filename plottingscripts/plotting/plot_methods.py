@@ -1,7 +1,7 @@
 import itertools
 import sys
 
-from matplotlib.pyplot import tight_layout, figure, subplots_adjust, subplot, savefig, show
+from matplotlib.pyplot import tight_layout, figure, subplots_adjust, subplot, savefig, show, tick_params
 import matplotlib.gridspec
 import numpy as np
 
@@ -10,37 +10,51 @@ import plottingscripts.utils.plot_util as plot_util
 
 def plot_optimization_trace(times, performance_list, title, name_list,
                             logx=True, logy=False, y_min=None, y_max=None,
-                            x_min=None, x_max=None, ylabel="performance"):
+                            x_min=None, x_max=None, ylabel="performance",
+                            properties=None):
     '''
     plots a median optimization trace based one time array
     '''
-    markers = 'o'
-    colors = itertools.cycle(["#e41a1c",    # Red
-                              "#377eb8",    # Blue
-                              "#4daf4a",    # Green
-                              "#984ea3",    # Purple
-                              "#ff7f00",    # Orange
-                              "#ffff33",    # Yellow
-                              "#a65628",    # Brown
-                              "#f781bf",    # Pink
-                              "#999999"])   # Grey
-    linestyles = '-'
-    size = 1
 
+    # complete properties
+    if properties is None:
+        properties = dict()
+    properties['markers'] = itertools.cycle(['o', ])
+    properties = plot_util.fill_with_defaults(properties)
+
+    #markers = 'o'
+    #colors = itertools.cycle(["#e41a1c",    # Red
+    #                          "#377eb8",    # Blue
+    #                          "#4daf4a",    # Green
+    #                          "#984ea3",    # Purple
+    #                          "#ff7f00",    # Orange
+    #                          "#ffff33",    # Yellow
+    #                          "#a65628",    # Brown
+    #                          "#f781bf",    # Pink
+    #                          "#999999"])   # Grey
+    #linestyles = '-'
+
+    size = 1
     # Set up figure
     ratio = 5
     gs = matplotlib.gridspec.GridSpec(ratio, 1)
-    fig = figure(1, dpi=100)
-    fig.suptitle(title, fontsize=16)
+    fig = figure(1, dpi=int(properties['dpi'])) #, figsize=(8, 4))
     ax1 = subplot(gs[0:ratio, :])
-    ax1.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+    ax1.grid(True, linestyle='-', which='major', color=properties["gridcolor"],
+             alpha=float(properties["gridalpha"]))
+
+    if title is not None:
+        fig.suptitle(title, fontsize=int(properties["titlefontsize"]))
 
     auto_y_min = sys.maxint
     auto_y_max = -sys.maxint
     auto_x_min = sys.maxint
 
     for idx, performance in enumerate(performance_list):
-        color = colors.next()
+        color = properties["colors"].next()
+        marker = properties["markers"].next()
+        linestyle = properties["linestyles"].next()
+        name_list[idx] = name_list[idx].replace("_", " ")
 
         median = np.median(performance, axis=0)
         upper_quartile = np.percentile(performance, q=75, axis=0)
@@ -53,9 +67,11 @@ def plot_optimization_trace(times, performance_list, title, name_list,
         # Plot mean and std
         ax1.fill_between(times, lower_quartile, upper_quartile,
                          facecolor=color, alpha=0.3, edgecolor=color)
-        ax1.plot(times, median, color=color, linewidth=size,
-                 linestyle=linestyles, marker=markers, label=name_list[idx].replace("_", " "))
-
+        ax1.plot(times, median, color=color,
+                 linewidth=int(properties["linewidth"]), linestyle=linestyle,
+                 marker=marker, markersize=int(properties["markersize"]),
+                 label=name_list[idx],
+                 )
         # Get limits
         # For y_min we always take the lowest value
         auto_y_min = min(min(lower_quartile[x_min:]), auto_y_min)
@@ -83,10 +99,10 @@ def plot_optimization_trace(times, performance_list, title, name_list,
     auto_x_max = times[-1]
 
     # Describe axes
-    ax1.set_ylabel("%s" % ylabel)
-    ax1.set_xlabel("time [sec]")
+    ax1.set_ylabel("%s" % ylabel, fontsize=properties["labelfontsize"])
+    ax1.set_xlabel("time [sec]", fontsize=properties["labelfontsize"])
 
-    leg = ax1.legend(loc='best', fancybox=True)
+    leg = ax1.legend(loc='best', fancybox=True, prop={'size': int(properties["legendsize"])})
     leg.get_frame().set_alpha(0.5)
 
     # Set axes limits
@@ -112,6 +128,8 @@ def plot_optimization_trace(times, performance_list, title, name_list,
         ax1.set_xlim([x_min, x_max])
     else:
         ax1.set_xlim([auto_x_min - 0.1*abs(auto_x_min), auto_x_max + 0.1*abs(auto_x_max)])
+
+    tick_params(axis='both', which='major', labelsize=properties["ticklabelsize"])
 
     return fig
 

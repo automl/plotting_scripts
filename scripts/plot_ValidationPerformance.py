@@ -10,7 +10,7 @@ import plottingscripts.plotting.plot_methods as plot_methods
 
 
 def main():
-    prog = "python plot_performance <WhatIsThis> one/or/many/*ClassicValidationResults*.csv"
+    prog = "python plot_ValidationPerformance.py <WhatIsThis> one/or/many/*ClassicValidationResults*.csv"
     description = "Plot a median trace with quantiles for multiple experiments"
 
     parser = ArgumentParser(description=description, prog=prog)
@@ -106,7 +106,9 @@ def main():
                     time_ = [time_[0], ]
                 else:
                     raise NotImplementedError(".csv are not using the same times")
+
     performance = [np.array(i) for i in performance]
+
     # print time_
     time_ = np.array(time_).flatten()
 
@@ -124,6 +126,7 @@ def main():
     args_dict = vars(args)
     for key in defaults:
         prop[key] = args_dict[key]
+
 
     if args.agglomeration == "median":
         fig = plot_methods.plot_optimization_trace(times=time_,

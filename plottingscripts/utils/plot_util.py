@@ -8,8 +8,9 @@ def get_empty_iterator():
 
 
 def get_plot_markers():
-    return itertools.cycle(['o', 's', 'x', '^', 'p', 'v', '>', '<', '8', '*',
-                            '+', 'D'])
+    return itertools.cycle(['o'])
+    #return itertools.cycle(['o', 's', 'x', '^', 'p', 'v', '>', '<', '8', '*',
+    #                        '+', 'D'])
 
 
 def get_plot_linestyles():
@@ -38,7 +39,7 @@ def get_plot_colors():
 def get_defaults():
     default = {"linestyles": get_single_linestyle(),
                "colors": get_plot_colors(),
-               "markers": get_empty_iterator(),
+               "markers": get_plot_markers(),
                "markersize": 6,
                "labelfontsize": 12,
                "linewidth": 1,

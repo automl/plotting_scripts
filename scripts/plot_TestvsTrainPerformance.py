@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from argparse import ArgumentParser
+import itertools
 import sys
 
 import numpy as np
@@ -10,7 +11,7 @@ import plottingscripts.plotting.plot_methods as plot_methods
 
 
 def main():
-    prog = "python plot_ValidationPerformance <WhatIsThis> one/or/many/*ClassicValidationResults*.csv"
+    prog = "python plot_TestvsTrainPerformance.py <WhatIsThis> one/or/many/*ClassicValidationResults*.csv"
     description = "Plot a median trace with quantiles for multiple experiments"
 
     parser = ArgumentParser(description=description, prog=prog)
@@ -61,10 +62,7 @@ def main():
         sys.exit(1)
 
     if args.ylabel is None:
-        if args.train:
-            args.ylabel = "%s performance on train instances" % args.agglomeration
-        else:
-            args.ylabel = "%s performance on test instances" % args.agglomeration
+        args.ylabel = "%s performance on instances" % args.agglomeration
 
     # Set up properties
 
@@ -81,24 +79,25 @@ def main():
     performance = list()
     time_ = list()
     show_from = -sys.maxint
+    name_list_test_train = []
 
     for name in range(len(name_list)):
         # We have a new experiment
-        performance.append(list())
+        trn_perf = []
+        tst_perf = []
         for fl in file_list[name]:
             _none, csv_data = read_util.read_csv(fl, has_header=True)
             csv_data = np.array(csv_data)
             # Replace too high values with args.maxint
-            if args.train:
-                data = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 1]]
-            elif args.test:
-                ## print csv_data
-                data = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 2]]
-            else:
-                print "This should not happen"
+            train_data = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 1]]
+            test_data = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 2]]
+
             # do we have only non maxint data?
-            show_from = max(data.count(args.maxvalue), show_from)
-            performance[-1].append(data)
+            show_from = max(train_data.count(args.maxvalue), show_from)
+            show_from = max(test_data.count(args.maxvalue), show_from)
+
+            trn_perf.append(train_data)
+            tst_perf.append(test_data)
             time_.append([float(i.strip()) for i in csv_data[:, 0]])
             # Check whether we have the same times for all runs
             if len(time_) == 2:
@@ -106,17 +105,23 @@ def main():
                     time_ = [time_[0], ]
                 else:
                     raise NotImplementedError(".csv are not using the same times")
+
+        trn_perf = np.array(trn_perf)
+        tst_perf = np.array(tst_perf)
+
+        name_list_test_train.append("%s_train" % name_list[name])
+        performance.append(trn_perf)
+        name_list_test_train.append("%s_test" % name_list[name])
+        performance.append(tst_perf)
+
+        # Just some output
+        best_train = np.argmin(trn_perf[:, -1])
+        print("Test of best train (% 20s): %f" % (name_list[name], tst_perf[best_train, -1]))
+
     performance = [np.array(i) for i in performance]
 
     # print time_
     time_ = np.array(time_).flatten()
-
-    if args.train:
-                print "Plot TRAIN performance"
-    elif args.test:
-                print "Plot TEST performance"
-    else:
-        print "Don't know what I'm printing"
 
     if args.xmin is None and show_from != 0:
         args.xmin = show_from
@@ -126,11 +131,21 @@ def main():
     for key in defaults:
         prop[key] = args_dict[key]
 
+    if len(name_list) > 1:
+        prop["linestyles"] = itertools.cycle([":", "-"])
+        c = []
+        cycle = plot_util.get_defaults()["colors"]
+        for i in range(10):
+            color = cycle.next()
+            c.extend([color, color])
+        prop["colors"] = itertools.cycle(c)
+        prop["markers"] = itertools.cycle([""])
+
     if args.agglomeration == "median":
         fig = plot_methods.plot_optimization_trace(times=time_,
                                                    performance_list=performance,
                                                    title=args.title,
-                                                   name_list=name_list,
+                                                   name_list=name_list_test_train,
                                                    logx=args.logx,
                                                    logy=args.logy,
                                                    y_min=args.ymin,
@@ -145,7 +160,7 @@ def main():
         fig = plot_methods.plot_optimization_trace_mult_exp(time_list=new_time_list,
                                                             performance_list=performance,
                                                             title=args.title,
-                                                            name_list=name_list,
+                                                            name_list=name_list_test_train,
                                                             logx=args.logx, logy=args.logy,
                                                             y_min=args.ymin,
                                                             y_max=args.ymax,

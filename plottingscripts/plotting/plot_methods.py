@@ -19,7 +19,7 @@ def plot_optimization_trace(times, performance_list, title, name_list,
     # complete properties
     if properties is None:
         properties = dict()
-    properties['markers'] = itertools.cycle(['o', ])
+    #properties['markers'] = itertools.cycle(['o', ])
     properties = plot_util.fill_with_defaults(properties)
 
     #markers = 'o'
@@ -55,11 +55,10 @@ def plot_optimization_trace(times, performance_list, title, name_list,
         marker = properties["markers"].next()
         linestyle = properties["linestyles"].next()
         name_list[idx] = name_list[idx].replace("_", " ")
-
         median = np.median(performance, axis=0)
         upper_quartile = np.percentile(performance, q=75, axis=0)
         lower_quartile = np.percentile(performance, q=25, axis=0)
-
+        print("Final incumbent performance (% 20s): %s" % (name_list[idx], median[-1]))
         if logy:
             lower_quartile[lower_quartile < 0.01] = 0.01
             median[median < 0.01] = 0.01

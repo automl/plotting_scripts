@@ -11,7 +11,8 @@ setuptools.setup(
     install_requires=["numpy",
                       "scipy",
                       "matplotlib",
-                      "pandas"
+                      "pandas",
+                      "tabulate"
                       ],
     test_requires=["mock"],
     test_suite='nose.collector',

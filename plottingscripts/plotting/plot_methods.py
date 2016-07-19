@@ -60,8 +60,8 @@ def plot_optimization_trace(times, performance_list, title, name_list,
         lower_quartile = np.percentile(performance, q=25, axis=0)
         print("Final incumbent performance (% 20s): %s" % (name_list[idx], median[-1]))
         if logy:
-            lower_quartile[lower_quartile < 0.01] = 0.01
-            median[median < 0.01] = 0.01
+            lower_quartile[lower_quartile < 0.0001] = 0.0001
+            median[median < 0.0001] = 0.0001
 
         # Plot mean and std
         ax1.fill_between(times, lower_quartile, upper_quartile,
@@ -104,11 +104,7 @@ def plot_optimization_trace(times, performance_list, title, name_list,
     leg = ax1.legend(loc='best', fancybox=True, prop={'size': int(properties["legendsize"])})
     leg.get_frame().set_alpha(0.5)
 
-    # Set axes limits
-    if logx:
-        ax1.set_xscale("log")
-    if logy:
-        ax1.set_yscale("log")
+
 
     if y_max is None and y_min is not None:
         ax1.set_ylim([y_min, auto_y_max + 0.01*abs(auto_y_max - y_min)])
@@ -130,6 +126,12 @@ def plot_optimization_trace(times, performance_list, title, name_list,
 
     tick_params(axis='both', which='major', labelsize=properties["ticklabelsize"])
 
+    # Set axes limits
+    if logx:
+        ax1.set_xscale("log")
+    if logy:
+        ax1.set_yscale("log")
+
     return fig
 
 
@@ -143,7 +145,6 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
     # complete properties
     if properties is None:
         properties = dict()
-    properties['markers'] = itertools.cycle(['o', 's', '^', '*'])
     properties = plot_util.fill_with_defaults(properties)
 
     size = 1
@@ -186,10 +187,11 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
             raise ValueError("Unknown agglomeration: %s" % agglomeration)
 
         if logy:
-            lower[lower > 0.01] = 0.01
+            lower[lower < 0.0001] = 0.0001
 
         # Plot mean and std
         if scale_std >= 0 and len(performance) > 1:
+            print lower
             ax1.fill_between(time_list[idx], lower, upper, facecolor=color,
                              alpha=0.3, edgecolor=color)
         ax1.plot(time_list[idx], m, color=color,
@@ -200,8 +202,17 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
 
         # Get limits
         # For y_min we always take the lowest value
-        auto_y_min = min(min(lower[x_min:]), auto_y_min)
-        auto_y_max = max(max(upper[x_min:]), auto_y_max)
+
+        # find out show from for this time_list
+        show_from = 0
+        if x_min != None:
+            for t_idx, t in enumerate(time_list[idx]):
+                if t > x_min:
+                    show_from = t_idx
+                    break
+
+        auto_y_min = min(min(lower[show_from:]), auto_y_min)
+        auto_y_max = max(max(upper[show_from:]), auto_y_max)
 
         auto_x_min = min(time_list[idx][0], auto_x_min)
         auto_x_max = max(time_list[idx][-1], auto_x_max)

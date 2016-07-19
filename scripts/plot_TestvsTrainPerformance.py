@@ -116,7 +116,7 @@ def main():
 
         # Just some output
         best_train = np.argmin(trn_perf[:, -1])
-        print("Test of best train (% 20s): %f" % (name_list[name], tst_perf[best_train, -1]))
+        print("Test of best train (% 20s): %g (%s)" % (name_list[name], tst_perf[best_train, -1], file_list[name][best_train][-30:]))
 
     performance = [np.array(i) for i in performance]
 
@@ -141,33 +141,20 @@ def main():
         prop["colors"] = itertools.cycle(c)
         prop["markers"] = itertools.cycle([""])
 
-    if args.agglomeration == "median":
-        fig = plot_methods.plot_optimization_trace(times=time_,
-                                                   performance_list=performance,
-                                                   title=args.title,
-                                                   name_list=name_list_test_train,
-                                                   logx=args.logx,
-                                                   logy=args.logy,
-                                                   y_min=args.ymin,
-                                                   y_max=args.ymax,
-                                                   x_min=args.xmin,
-                                                   x_max=args.xmax,
-                                                   ylabel=args.ylabel,
-                                                   properties=prop)
-    else:
-        # This plotting function requires a time array for each experiment
-        new_time_list = [time_ for i in range(len(performance))]
-        fig = plot_methods.plot_optimization_trace_mult_exp(time_list=new_time_list,
-                                                            performance_list=performance,
-                                                            title=args.title,
-                                                            name_list=name_list_test_train,
-                                                            logx=args.logx, logy=args.logy,
-                                                            y_min=args.ymin,
-                                                            y_max=args.ymax,
-                                                            x_min=args.xmin,
-                                                            x_max=args.xmax,
-                                                            agglomeration="mean",
-                                                            ylabel=args.ylabel)
+    # This plotting function requires a time array for each experiment
+    new_time_list = [time_ for i in range(len(performance))]
+    fig = plot_methods.plot_optimization_trace_mult_exp(time_list=new_time_list,
+                                                        performance_list=performance,
+                                                        title=args.title,
+                                                        name_list=name_list_test_train,
+                                                        logx=args.logx, logy=args.logy,
+                                                        y_min=args.ymin,
+                                                        y_max=args.ymax,
+                                                        x_min=args.xmin,
+                                                        x_max=args.xmax,
+                                                        agglomeration=args.agglomeration,
+                                                        ylabel=args.ylabel,
+                                                        properties=prop)
 
     if args.save != "":
         print "Save plot to %s" % args.save

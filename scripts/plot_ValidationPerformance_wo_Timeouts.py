@@ -10,8 +10,10 @@ import plottingscripts.plotting.plot_methods as plot_methods
 
 
 def main():
-    prog = "python plot_performance <WhatIsThis> one/or/many/*ClassicValidationResults*.csv"
-    description = "Plot a median trace with quantiles for multiple experiments"
+    prog = "python plot_performance_wo_Timeouts <WhatIsThis> " \
+           "one/or/many/validationObjectiveMatrix*.csv"
+    description = "Plot a median trace with quantiles for multiple " \
+                  "experiments, but ignore Timeouts"
 
     parser = ArgumentParser(description=description, prog=prog)
 
@@ -24,26 +26,24 @@ def main():
                         default=None, help="Maximum of the y-axis")
     parser.add_argument("--ymin", dest="ymin", type=float,
                         default=None, help="Minimum of the y-axis")
-    parser.add_argument("--xmax", dest="xmax", type=float,
-                        default=None, help="Maximum of the x-axis")
-    parser.add_argument("--xmin", dest="xmin", type=float,
-                        default=None, help="Minimum of the x-axis")
     parser.add_argument("--ylabel", dest="ylabel", default=None,
                         help="Label on y-axis")
     parser.add_argument("-s", "--save", dest="save",
-                        default="", help="Where to save plot instead of showing it?")
+                        default="",
+                        help="Where to save plot instead of showing it?")
     parser.add_argument("-t", "--title", dest="title",
-                        default="", help="Optional supertitle for plot")
+                        default="",
+                        help="Optional supertitle for plot")
     parser.add_argument("--maxvalue", dest="maxvalue", type=float,
-                        default=sys.maxint, help="Replace all values higher than this?")
+                        default=sys.maxint,
+                        help="Replace all values higher than this?")
     parser.add_argument("--agglomeration", dest="agglomeration", type=str,
                         default="median", choices=("median", "mean"),
                         help="Plot mean or median")
-    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
-                        help="print number of runs on plot")
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('--train', dest="train",  default=False, action='store_true')
-    group.add_argument('--test', dest="test", default=True, action='store_true')
+    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true",
+                        default=False, help="print number of runs on plot")
+    parser.add_argument("-c", "--cutoff", dest="cutoff", required=True,
+                        type=float, help="Cutoff of this scenario")
 
     args, unknown = parser.parse_known_args()
 
@@ -55,88 +55,53 @@ def main():
         sys.exit(1)
 
     if args.ylabel is None:
-        if args.train:
-            args.ylabel = "%s performance on train instances" % args.agglomeration
-        else:
-            args.ylabel = "%s performance on test instances" % args.agglomeration
+        args.ylabel = "%s performance on instances" % args.agglomeration
 
     # Get files and names
-    file_list, name_list = read_util.get_file_and_name_list(unknown, match_file='.csv')
+    file_list, name_list = read_util.get_file_and_name_list(unknown,
+                                                            match_file='.csv')
     for idx in range(len(name_list)):
         print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))
 
     if args.verbose:
-        name_list = [name_list[i] + " (" + str(len(file_list[i])) + ")" for i in range(len(name_list))]
+        name_list = [name_list[i] + " (" + str(len(file_list[i])) + ")" for
+                     i in range(len(name_list))]
 
     # Get data from csv
     performance = list()
     time_ = list()
-    show_from = -sys.maxint
 
     for name in range(len(name_list)):
         # We have a new experiment
         performance.append(list())
+        time_.append([1, 2])
         for fl in file_list[name]:
-            _none, csv_data = read_util.read_csv(fl, has_header=True)
-            csv_data = np.array(csv_data)
-            # Replace too high values with args.maxint
-            if args.train:
-                data = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 1]]
-            elif args.test:
-                ## print csv_data
-                data = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 2]]
-            else:
-                print "This should not happen"
-            # do we have only non maxint data?
-            show_from = max(data.count(args.maxvalue), show_from)
-            performance[-1].append(data)
-            time_.append([float(i.strip()) for i in csv_data[:, 0]])
-            # Check whether we have the same times for all runs
-            if len(time_) == 2:
-                if time_[0] == time_[1]:
-                    time_ = [time_[0], ]
-                else:
-                    raise NotImplementedError(".csv are not using the same times")
+            data_dict = read_util.read_validationObjectiveMatrix_file(fl)
+            # Get Performance for each step
+            tmp_performance = list()
+            for idx in [0, -1]:
+                summer = [data_dict[inst][idx] for inst in data_dict.keys()]
+                summer = np.array(summer)
+                notTimeout_idx = summer < args.cutoff
+                summer = summer[notTimeout_idx]
+                tmp_performance.append(np.mean(summer))
+            performance[-1].append(tmp_performance)
+
     performance = [np.array(i) for i in performance]
-    # print time_
-    time_ = np.array(time_).flatten()
 
-    if args.train:
-                print "Plot TRAIN performance"
-    elif args.test:
-                print "Plot TEST performance"
-    else:
-        print "Don't know what I'm printing"
-
-    if args.xmin is None and show_from != 0:
-        args.xmin = show_from
-
-    if args.agglomeration == "median":
-        fig = plot_methods.plot_optimization_trace(times=time_,
-                                                   performance_list=performance,
-                                                   title=args.title,
-                                                   name_list=name_list,
-                                                   logx=args.logx,
-                                                   logy=args.logy,
-                                                   y_min=args.ymin,
-                                                   y_max=args.ymax,
-                                                   x_min=args.xmin,
-                                                   x_max=args.xmax,
-                                                   ylabel=args.ylabel)
-    else:
-        # This plotting function requires a time array for each experiment
-        new_time_list = [time_ for i in range(len(performance))]
-        fig = plot_methods.plot_optimization_trace_mult_exp(time_list=new_time_list,
-                                                            performance_list=performance,
-                                                            title=args.title,
-                                                            name_list=name_list,
-                                                            logx=True, logy=args.log,
-                                                            y_min=args.ymin,
-                                                            y_max=args.ymax,
-                                                            x_min=args.xmin,
-                                                            x_max=args.xmax,
-                                                            agglomeration="mean",
-                                                            ylabel=args.ylabel)
+    # This plotting function requires a time array for each experiment
+    fig = plot_methods.plot_optimization_trace_mult_exp(time_list=time_,
+                                                        performance_list=performance,
+                                                        title=args.title,
+                                                        name_list=name_list,
+                                                        logx=args.logx,
+                                                        logy=args.logy,
+                                                        y_max=args.ymax,
+                                                        y_min=args.ymin,
+                                                        x_min=0.8,
+                                                        x_max=2.2,
+                                                        agglomeration=args.agglomeration,
+                                                        ylabel=args.ylabel)
 
     if args.save != "":
         print "Save plot to %s" % args.save

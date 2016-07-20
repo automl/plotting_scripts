@@ -191,7 +191,6 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
 
         # Plot mean and std
         if scale_std >= 0 and len(performance) > 1:
-            print lower
             ax1.fill_between(time_list[idx], lower, upper, facecolor=color,
                              alpha=0.3, edgecolor=color)
         ax1.plot(time_list[idx], m, color=color,
@@ -230,6 +229,8 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
 
     leg = ax1.legend(loc='best', fancybox=True, prop={'size': int(properties["legendsize"])})
     leg.get_frame().set_alpha(0.5)
+
+    tick_params(axis='both', which='major', labelsize=properties["ticklabelsize"])
 
     # Set axes limits
     if y_max is None and y_min is not None:

@@ -144,6 +144,7 @@ def main():
 
         # If not GGA draw bootstrap samples
         if "GGA" not in name_list[name]:
+            print "Bootstrap %s" % name_list[name]
             new_performance = np.zeros([bootstrap_repetitions,
                                         tmp_tst_perf_list.shape[1]])
             for t in range(tmp_tst_perf_list.shape[1]):

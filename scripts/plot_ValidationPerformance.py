@@ -67,7 +67,10 @@ def main():
             args.ylabel = "%s performance on test instances" % args.agglomeration
 
     # Set up properties
-
+    prop = {}
+    args_dict = vars(args)
+    for key in defaults:
+        prop[key] = args_dict[key]
 
     # Get files and names
     file_list, name_list = read_util.get_file_and_name_list(unknown, match_file='.csv')
@@ -122,25 +125,19 @@ def main():
     if args.xmin is None and show_from != 0:
         args.xmin = show_from
 
-    prop = {}
-    args_dict = vars(args)
-    for key in defaults:
-        prop[key] = args_dict[key]
-
-
     new_time_list = [time_ for i in range(len(performance))]
     fig = plot_methods.plot_optimization_trace_mult_exp(time_list=new_time_list,
-                                                            performance_list=performance,
-                                                            title=args.title,
-                                                            name_list=name_list,
-                                                            logx=args.logx, logy=args.logy,
-                                                            y_min=args.ymin,
-                                                            y_max=args.ymax,
-                                                            x_min=args.xmin,
-                                                            x_max=args.xmax,
-                                                            agglomeration=args.agglomeration,
-                                                            ylabel=args.ylabel,
-                                                            properties=prop)
+                                                        performance_list=performance,
+                                                        title=args.title,
+                                                        name_list=name_list,
+                                                        logx=args.logx, logy=args.logy,
+                                                        y_min=args.ymin,
+                                                        y_max=args.ymax,
+                                                        x_min=args.xmin,
+                                                        x_max=args.xmax,
+                                                        agglomeration=args.agglomeration,
+                                                        ylabel=args.ylabel,
+                                                        properties=prop)
     if args.save != "":
         print "Save plot to %s" % args.save
         plot_util.save_plot(fig, args.save, plot_util.get_defaults()['dpi'])

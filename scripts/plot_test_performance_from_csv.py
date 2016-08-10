@@ -5,8 +5,8 @@ import csv
 import itertools
 import sys
 
-import plot_util
-import plot_methods
+from plottingscripts.utils import read_util, plot_util
+import plottingscripts.plotting.plot_methods as plot_methods
 
 
 def main():
@@ -57,7 +57,7 @@ def main():
         sys.exit(1)
 
     # Get files and names
-    file_list, name_list = plot_util.get_file_and_name_list(unknown, match_file='.csv')
+    file_list, name_list = read_util.get_file_and_name_list(unknown, match_file='.csv')
     for idx in range(len(name_list)):
         assert len(file_list[idx]) == 1, "%s" % str(file_list[idx])
         print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))
@@ -92,20 +92,23 @@ def main():
     for key in defaults:
         prop[key] = args_dict[key]
 
-    plot_methods.plot_optimization_trace_mult_exp(time_list=times,
-                                                  performance_list=performances,
-                                                  title=args.title,
-                                                  name_list=name_list,
-                                                  ylabel=args.ylabel,
-                                                  logy=args.logy,
-                                                  logx=args.logx,
-                                                  save=args.save,
-                                                  y_min=args.ymin,
-                                                  y_max=args.ymax,
-                                                  x_min=args.xmin,
-                                                  x_max=args.xmax,
-                                                  properties=prop, scale_std=1)
-
+    fig = plot_methods.plot_optimization_trace_mult_exp(time_list=times,
+                                                        performance_list=performances,
+                                                        title=args.title,
+                                                        name_list=name_list,
+                                                        ylabel=args.ylabel,
+                                                        logy=args.logy,
+                                                        logx=args.logx,
+                                                        y_min=args.ymin,
+                                                        y_max=args.ymax,
+                                                        x_min=args.xmin,
+                                                        x_max=args.xmax,
+                                                        properties=prop, scale_std=1)
+    if args.save != "":
+        print "Save plot to %s" % args.save
+        plot_util.save_plot(fig, args.save, plot_util.get_defaults()['dpi'])
+    else:
+        fig.show()
 
 if __name__ == "__main__":
     main()

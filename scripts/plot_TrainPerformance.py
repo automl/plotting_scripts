@@ -1,20 +1,22 @@
 #!/usr/bin/env python
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import sys
 
 import numpy as np
 
-import plot_util
-import plot_methods
-import merge_test_performance_different_times
+from plottingscripts.utils import read_util, plot_util
+import plottingscripts.plotting.plot_methods as plot_methods
+import plottingscripts.utils.merge_test_performance_different_times as \
+    merge_test_performance_different_times
 
 
 def main():
     prog = "python plot_performance <WhatIsThis> one/or/many/runs_and_results*.csv"
     description = "Plot a median trace with quantiles for multiple experiments"
 
-    parser = ArgumentParser(description=description, prog=prog)
+    parser = ArgumentParser(description=description, prog=prog,
+                            formatter_class=ArgumentDefaultsHelpFormatter)
 
     # General Options
     parser.add_argument("-l", "--log", action="store_true", dest="log",
@@ -37,8 +39,11 @@ def main():
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true",
                         default=False, help="print number of runs on plot")
     parser.add_argument("--agglomeration", dest="agglomeration", type=str,
-                        default="mean", help="Show mean or median",
+                        default="median", help="Show mean or median",
                         choices=("mean", "median"))
+    parser.add_argument("--ylabel", dest="ylabel", default="Performance")
+    parser.add_argument("--optimum", dest="optimum", default=0, type=float,
+                        help="Plot difference to optimum")
 
     args, unknown = parser.parse_known_args()
 
@@ -50,12 +55,14 @@ def main():
         sys.exit(1)
 
     # Get files and names
-    file_list, name_list = plot_util.get_file_and_name_list(unknown, match_file=".")
+    file_list, name_list = read_util.get_file_and_name_list(unknown,
+                                                            match_file=".")
     for idx in range(len(name_list)):
         print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))
 
     if args.verbose:
-        name_list = [name_list[i] + " (" + str(len(file_list[i])) + ")" for i in range(len(name_list))]
+        name_list = [name_list[i] + " (" + str(len(file_list[i])) + ")"
+                     for i in range(len(name_list))]
 
     # Get data from csv
     performance_list = list()
@@ -68,20 +75,22 @@ def main():
         performance = list()
         time_ = list()
         for fl in file_list[name]:
-            _none, csv_data = plot_util.read_csv(fl, has_header=True)
+            _none, csv_data = read_util.read_csv(fl, has_header=True)
             csv_data = np.array(csv_data)
 
             # Replace too high values with args.maxint
-            data = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 1]]
+            data = [min([args.maxvalue, float(i.strip()) - args.optimum])
+                    for i in csv_data[:, 1]]
 
             # do we have only non maxint data?
             show_from = max(data.count(args.maxvalue), show_from)
 
             performance.append(data)
-            time_.append([float(i.strip()) for i in csv_data[:, 2]])
+            time_.append([float(i.strip()) for i in csv_data[:, 0]])
         if len(time_) > 1:
             print len(time_)
-            performance, time_ = merge_test_performance_different_times.fill_trajectory(performance_list=performance, time_list=time_)
+            performance, time_ = merge_test_performance_different_times.\
+                fill_trajectory(performance_list=performance, time_list=time_)
             print performance[0][:10]
         else:
             time_ = time_[0]
@@ -93,27 +102,23 @@ def main():
     if args.xmin is None and show_from != 0:
         args.xmin = show_from
 
-    save = ""
+    fig = plot_methods.plot_optimization_trace_mult_exp(time_list=time_list,
+                                                        performance_list=performance_list,
+                                                        title=args.title,
+                                                        name_list=name_list,
+                                                        logx=args.log, logy=False,
+                                                        agglomeration=args.agglomeration,
+                                                        y_min=args.ymin,
+                                                        y_max=args.ymax,
+                                                        x_min=args.xmin,
+                                                        x_max=args.xmax,
+                                                        ylabel=args.ylabel)
+
     if args.save != "":
-        save = args.save
-        print "Save to %s" % args.save
+        print "Save plot to %s" % args.save
+        plot_util.save_plot(fig, args.save, plot_util.get_defaults()['dpi'])
     else:
-        print "Show"
-
-    print time_list[0].shape
-    print performance_list[0][0].shape
-
-    plot_methods.plot_optimization_trace_mult_exp(time_list=time_list,
-                                                  performance_list=performance_list,
-                                                  title=args.title,
-                                                  name_list=name_list,
-                                                  logx=args.log, logy=False,
-                                                  agglomeration=args.agglomeration,
-                                                  save=save,
-                                                  y_min=args.ymin,
-                                                  y_max=args.ymax,
-                                                  x_min=args.xmin,
-                                                  x_max=args.xmax)
+        fig.show()
 
 if __name__ == "__main__":
     main()

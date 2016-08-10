@@ -2,14 +2,12 @@
 
 from argparse import ArgumentParser
 import sys
-import itertools
 
-from matplotlib.pyplot import tight_layout, figure, subplots_adjust, subplot, savefig, show
-import matplotlib.gridspec
 import numpy as np
 
-import plot_util
-import plot_scatter
+from plottingscripts.utils import read_util, plot_util
+import plottingscripts.plotting.scatter as scatter
+
 
 def main():
     prog = "python plot_scatter.py any.csv"
@@ -66,7 +64,8 @@ def main():
     columns = [i-1 for i in columns]
 
     # Load validationResults
-    res_header, res_data = plot_util.read_csv(unknown[0], has_header=True, data_type=np.float)
+    res_header, res_data = read_util.read_csv(unknown[0], has_header=True,
+                                              data_type=np.float)
     res_data = np.array(res_data)
     print "Found %s points" % (str(res_data.shape))
 
@@ -93,23 +92,22 @@ def main():
     if args.grey_factor > 1 and args.grey_factor not in linefactors:
         linefactors.append(args.grey_factor)
 
-    save = ""
-    if args.save != "":
-        save = args.save
-        print "Save to %s" % args.save
-    else:
-        print "Show"
-    plot_scatter.plot_scatter_plot(x_data=data_x, y_data=data_y,
-                                   labels=[label_x, label_y],
-                                   title=args.title,
-                                   save=save, max_val=args.max,
-                                   min_val=args.min,
-                                   grey_factor=args.grey_factor,
-                                   linefactors=linefactors,
-                                   debug=args.verbose,
-                                   user_fontsize=args.user_fontsize,
-                                   dpi=args.dpi)
+    fig = scatter.plot_scatter_plot(x_data=data_x, y_data=data_y,
+                                    labels=[label_x, label_y],
+                                    title=args.title,
+                                    max_val=args.max,
+                                    min_val=args.min,
+                                    grey_factor=args.grey_factor,
+                                    linefactors=linefactors,
+                                    debug=args.verbose,
+                                    user_fontsize=args.user_fontsize,
+                                    dpi=args.dpi)
 
+    if args.save != "":
+        print "Save plot to %s" % args.save
+        plot_util.save_plot(fig, args.save, plot_util.get_defaults()['dpi'])
+    else:
+        fig.show()
 
 if __name__ == "__main__":
     main()

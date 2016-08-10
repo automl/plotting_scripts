@@ -179,7 +179,13 @@ def main():
     prop = {}
     args_dict = vars(args)
     for key in defaults:
-        prop[key] = args_dict[key]
+        properties[key] = args_dict[key]
+        try:
+            properties[key] = float(properties[key])
+            if int(properties[key]) == properties[key]:
+                properties[key] = int(properties[key])
+        except:
+            continue
 
     new_time_list = [time_ for i in range(len(performance))]
     fig = plot_methods.plot_optimization_trace_mult_exp(time_list=new_time_list,

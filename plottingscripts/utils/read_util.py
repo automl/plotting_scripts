@@ -85,7 +85,7 @@ def read_trajectory_file(fn):
 
 
 def read_validationObjectiveMatrix_file(fn):
-    """ COPIED FROM pySMAC, modified
+    """ COPIED FROM pySMAC, modified to not use regexps
     reads the run data of a validation run performed by SMAC.
 
     For cases with instances, not necessarily every instance is used during the
@@ -98,8 +98,8 @@ def read_validationObjectiveMatrix_file(fn):
     :param fn: the name of the validationObjectiveMatrix file
     :type fn: str
 
-    :returns: dict -- configuration ids as keys, list of performances on each
-    instance as values.
+    :returns: dict -- instances as keys, list of performances for each config
+                      as list
 
     .. todo::
        testing of validation runs where more than the final incumbent is
@@ -110,13 +110,21 @@ def read_validationObjectiveMatrix_file(fn):
     with open(fn, 'r') as fh:
         header = fh.readline().split(",")
         num_configs = len(header) - 2
-        re_string = '\w?,\w?'.join(['"(.*)"', '"(-?\d*)"'] +
-                                   ['"([0-9.]*)"'] * num_configs)
+        #re_string = '\w?,\w?'.join(['"(.*)"', '"(-?\d*)"'] +
+        #                           ['"([0-9.]*)"'] * num_configs)
         for line in fh.readlines():
-            match = (re.match(re_string, line))
-            if match.group(1) in values:
-                print("Cannot handle more than one seed per instance")
-            values[match.group(1)] = \
-                list(map(float,
-                         list(map(match.group, list(range(3, 3+num_configs))))))
+            #match = (re.match(re_string, line))
+            #if match.group(1) in values:
+            #    print("Cannot handle more than one seed per instance")
+            #values[match.group(1)] = \
+            #    list(map(float,
+            #             list(map(match.group, list(range(3, 3+num_configs))))))
+            line = line.split(",")
+            inst = line[0].strip().replace('"', '').replace("'", "")
+            if inst in values:
+                raise ValueError("Cannot handle more than one seed per instance")
+            values[inst] = [float(i.strip().replace('"', '').replace("'", ""))
+                            for i in line[2:]]
+            assert len(values[inst]) == num_configs
+
     return values

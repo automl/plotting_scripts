@@ -40,7 +40,7 @@ def get_defaults():
     default = {"linestyles": get_single_linestyle(),
                "colors": get_plot_colors(),
                "markers": get_plot_markers(),
-               "markersize": 6,
+               "markersize": 15,
                "labelfontsize": 12,
                "linewidth": 1,
                "titlefontsize": 15,

@@ -69,8 +69,14 @@ def main():
     # Set up properties
     prop = {}
     args_dict = vars(args)
-    for key in defaults:
-        prop[key] = args_dict[key]
+        for key in defaults:
+        properties[key] = args_dict[key]
+        try:
+            properties[key] = float(properties[key])
+            if int(properties[key]) == properties[key]:
+                properties[key] = int(properties[key])
+        except:
+            continue
 
     # Get files and names
     file_list, name_list = read_util.get_file_and_name_list(unknown, match_file='.csv')

@@ -5,6 +5,7 @@ import os
 import sys
 import collections
 
+import scipy.stats
 import numpy as np
 
 from matplotlib.pyplot import tight_layout, figure, subplots_adjust, subplot, savefig, show, tick_params
@@ -57,6 +58,9 @@ def main():
     parser.add_argument("--default", dest="default", default=False,
                         action="store_true", help="If RANDOM given then mark "
                                                   "the first config as default")
+    parser.add_argument("--correlation", dest="correlation", default=False,
+                        action="store_true",
+                        help="Show Spearman rank-order correlation coefficient")
 
     # Properties
     # We need this to show defaults for -h
@@ -114,8 +118,28 @@ def main():
         print value_dict[name_list[name]].shape
     name_ls = set(name_ls)
 
+    ################### Calculate correlation
+    if args.correlation:
+        for base_name in name_ls:
+            if len(value_dict[base_name + "_train"]) < 2:
+                print("% 15s has only one entry" % base_name)
+                continue
+
+            corr, pvalue = scipy.stats.spearmanr(
+                    value_dict[base_name + "_train"],
+                    value_dict[base_name + "_test"])
+            print("% 50s has a correlation of % 5g" % (base_name[:50], corr))
+
+            # Calc correlation for 20% best
+            idx = np.argsort(value_dict[base_name + "_train"])
+            idx = idx[:int(len(idx)*0.2)]
+            corr, pvalue = scipy.stats.spearmanr(
+                    value_dict[base_name + "_train"][idx],
+                    value_dict[base_name + "_test"][idx])
+            print("Top 20%% (% 3d) of % 33s has a correlation of % 5g" % (len(idx), base_name[:32], corr))
+
     ################### Plotting starts here
-    ################### TODO: Put in separate folder
+    ################### TODO: Put plotting code in separate script
     properties = {}
     args_dict = vars(args)
     for key in defaults:
@@ -142,23 +166,25 @@ def main():
             # Do not plot using alpha
             alpha = 1
             zorder = 99
+            c = 'k'
         else:
             alpha = 0.5
             zorder = None
+            c = properties["colors"].next()
         ax1.scatter(value_dict[base_name + "_train"],
                     value_dict[base_name + "_test"],
                     label=base_name.replace("_", " "),
                     marker=properties["markers"].next(),
-                    c=properties["colors"].next(), edgecolor="",
+                    c=c, edgecolor="",
                     s=properties["markersize"], alpha=alpha, zorder=zorder)
         if (base_name.upper() == "RANDOM" and args.default):
             ax1.scatter(value_dict[base_name + "_train"][0],
                         value_dict[base_name + "_test"][0],
                         label="default", marker=properties["markers"].next(),
-                        c=properties["colors"].next(), edgecolor="",
+                        c='k', edgecolor="",
                         s=properties["markersize"], alpha=1, zorder=99)
     ax1.legend(loc="lower right", framealpha=1, fancybox=True, ncol=1,
-               scatterpoints=1)
+               scatterpoints=1, prop={'size': int(properties["legendsize"])})
 
     ax1.set_xlabel("PAR10 on training set", fontsize=properties["labelfontsize"])
     ax1.set_ylabel("PAR10 on test set", fontsize=properties["labelfontsize"])

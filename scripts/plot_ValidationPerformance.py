@@ -70,7 +70,7 @@ def main():
     prop = {}
     args_dict = vars(args)
         for key in defaults:
-        properties[key] = args_dict[key]
+            properties[key] = args_dict[key]
         try:
             properties[key] = float(properties[key])
             if int(properties[key]) == properties[key]:

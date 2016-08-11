@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+import os
 import sys
 
 import numpy as np
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from plottingscripts.utils import read_util, plot_util
 import plottingscripts.plotting.plot_methods as plot_methods
@@ -13,7 +16,8 @@ def main():
     prog = "python plot_ValidationPerformance.py <WhatIsThis> one/or/many/*ClassicValidationResults*.csv"
     description = "Plot a median trace with quantiles for multiple experiments"
 
-    parser = ArgumentParser(description=description, prog=prog)
+    parser = ArgumentParser(description=description, prog=prog,
+                            formatter_class=ArgumentDefaultsHelpFormatter)
 
     # General Options
     parser.add_argument("--logx", action="store_true", dest="logx",
@@ -67,10 +71,10 @@ def main():
             args.ylabel = "%s performance on test instances" % args.agglomeration
 
     # Set up properties
-    prop = {}
+    properties = {}
     args_dict = vars(args)
-        for key in defaults:
-            properties[key] = args_dict[key]
+    for key in defaults:
+        properties[key] = args_dict[key]
         try:
             properties[key] = float(properties[key])
             if int(properties[key]) == properties[key]:
@@ -143,7 +147,7 @@ def main():
                                                         x_max=args.xmax,
                                                         agglomeration=args.agglomeration,
                                                         ylabel=args.ylabel,
-                                                        properties=prop)
+                                                        properties=properties)
     if args.save != "":
         print "Save plot to %s" % args.save
         plot_util.save_plot(fig, args.save, plot_util.get_defaults()['dpi'])

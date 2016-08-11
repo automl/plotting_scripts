@@ -2,9 +2,12 @@
 
 from argparse import ArgumentParser
 import itertools
+import os
 import sys
 
 import numpy as np
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from plottingscripts.utils import read_util, plot_util
 import plottingscripts.plotting.plot_methods as plot_methods
@@ -63,9 +66,6 @@ def main():
 
     if args.ylabel is None:
         args.ylabel = "%s performance on instances" % args.agglomeration
-
-    # Set up properties
-
 
     # Get files and names
     file_list, name_list = read_util.get_file_and_name_list(unknown, match_file='.csv')
@@ -126,20 +126,28 @@ def main():
     if args.xmin is None and show_from != 0:
         args.xmin = show_from
 
-    prop = {}
+    # Set up properties
+    properties = {}
     args_dict = vars(args)
     for key in defaults:
-        prop[key] = args_dict[key]
+        properties[key] = args_dict[key]
+        try:
+            properties[key] = float(properties[key])
+            if int(properties[key]) == properties[key]:
+                properties[key] = int(properties[key])
+        except:
+            continue
+
 
     if len(name_list) > 1:
-        prop["linestyles"] = itertools.cycle([":", "-"])
+        properties["linestyles"] = itertools.cycle([":", "-"])
         c = []
         cycle = plot_util.get_defaults()["colors"]
         for i in range(10):
             color = cycle.next()
             c.extend([color, color])
-        prop["colors"] = itertools.cycle(c)
-        prop["markers"] = itertools.cycle([""])
+        properties["colors"] = itertools.cycle(c)
+        properties["markers"] = itertools.cycle([""])
 
     # This plotting function requires a time array for each experiment
     new_time_list = [time_ for i in range(len(performance))]
@@ -154,7 +162,7 @@ def main():
                                                         x_max=args.xmax,
                                                         agglomeration=args.agglomeration,
                                                         ylabel=args.ylabel,
-                                                        properties=prop)
+                                                        properties=properties)
 
     if args.save != "":
         print "Save plot to %s" % args.save

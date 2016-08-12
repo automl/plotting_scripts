@@ -6,7 +6,7 @@ import sys
 
 import numpy as np
 
-sys.path.append(os.path.basename(os.path.basename(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from plottingscripts.utils import read_util, plot_util, helper
 import plottingscripts.plotting.plot_methods as plot_methods
@@ -52,11 +52,6 @@ def main():
                              "trajectories and plot best of train")
     parser.add_argument("--seed", default=None, type=int, dest="seed",
                         help="Seed for reproducibility")
-    # Disable for now
-    #group = parser.add_mutually_exclusive_group()
-    #group.add_argument('--train', dest="train",  default=False,
-    #                   action='store_true')
-    #group.add_argument('--test', dest="test", default=True, action='store_true')
 
     # Properties
     # We need this to show defaults for -h
@@ -82,13 +77,6 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    #if args.ylabel is None:
-    #    if args.train:
-    #        args.ylabel = "%s performance on train instances" % \
-    #                      args.agglomeration
-    #    else:
-    #        args.ylabel = "%s performance on test instances" % \
-    #                      args.agglomeration
     args.ylabel = "%s performance on test instances" % args.agglomeration
 
     # Set up properties
@@ -148,11 +136,16 @@ def main():
             new_performance = np.zeros([bootstrap_repetitions,
                                         tmp_tst_perf_list.shape[1]])
             for t in range(tmp_tst_perf_list.shape[1]):
+                # for each timestep
                 for i in range(bootstrap_repetitions):
+                    # for each repetition (='pseudo' run)
+                    # sample #bootstrap-sample-size idxs
                     sample_idx = helper.bootstrap_sample_idx(
                             num_samples=len(tmp_tst_perf_list),
                             boot_strap_size=bootstrap_samples)
+                    # then get test value of best train
                     best_train = np.argmin(tmp_trn_perf_list[sample_idx, t])
+                    # and use this as new performance for pseudorun i at time t
                     new_performance[i, t] = tmp_tst_perf_list[best_train, t]
             performance.append(new_performance)
         else:
@@ -160,23 +153,14 @@ def main():
 
     performance = [np.array(i) for i in performance]
 
-
-    # print time_
     time_ = np.array(time_).flatten()
     print time_.shape
     print [p.shape for p in performance]
 
-    #if args.train:
-    #            print "Plot TRAIN performance"
-    #elif args.test:
-    #            print "Plot TEST performance"
-    #else:
-    #    print "Don't know what I'm printing"
-
     if args.xmin is None and show_from != 0:
         args.xmin = show_from
 
-    prop = {}
+    properties = {}
     args_dict = vars(args)
     for key in defaults:
         properties[key] = args_dict[key]
@@ -200,7 +184,7 @@ def main():
                                                         x_max=args.xmax,
                                                         agglomeration=args.agglomeration,
                                                         ylabel=args.ylabel,
-                                                        properties=prop)
+                                                        properties=properties)
     if args.save != "":
         print "Save plot to %s" % args.save
         plot_util.save_plot(fig, args.save, plot_util.get_defaults()['dpi'])

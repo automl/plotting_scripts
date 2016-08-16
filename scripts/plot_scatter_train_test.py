@@ -46,9 +46,6 @@ def main():
                         help="print number of runs on plot")
     parser.add_argument("--log", dest="log", action="store_true", default=False,
                         help="Set axes to log scale")
-    parser.add_argument("--objective", dest="objective", action="store_true",
-                        default=False, help="Provide a ObjectiveMatrix instead "
-                                            "of RunResults")
     parser.add_argument("--par", dest="par", type=int, default=None,
                         help="Only used for ObjectiveMatrix to calculate PAR "
                              "score")
@@ -71,11 +68,6 @@ def main():
 
     args, unknown = parser.parse_known_args()
 
-    if args.objective:
-        assert args.cutoff is not None, "If --objective, you need to " \
-                                        "set --cutoff"
-        assert args.par is not None, "If --objective, you need to set --par"
-
     # Get files and names
     file_list, name_list = read_util.get_file_and_name_list(unknown,
                                                             match_file='.csv')
@@ -95,9 +87,12 @@ def main():
         name_ls.append(base_name)
         value_dict[name_list[name]] = list()
         for fl in file_list[name]:
-            if args.objective:
-                # We need to parse objective matrix and calc PAR score
+            try:
                 data = read_util.read_validationObjectiveMatrix_file(fl)
+                assert args.cutoff is not None, "If reading Objective Matrix " \
+                                                "you  need to set --cutoff"
+                assert args.par is not None, "If reading Objective Matrix " \
+                                             "you need to set --par"
                 perf = list()
                 for cf in data:
                     row = np.array(data[cf])
@@ -107,7 +102,8 @@ def main():
                 value_dict[name_list[name]].append(np.mean(perf, axis=0))
                 min_ = np.min((min_, np.min(np.mean(perf, axis=0))))
                 max_ = np.max((max_, np.max(np.mean(perf, axis=0))))
-            else:
+            except ValueError:
+                print("Trying to read trajectory file")
                 data = read_util.read_trajectory_file(fl)
                 for entry in data:
                     value_dict[name_list[name]].append(

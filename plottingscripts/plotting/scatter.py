@@ -1,15 +1,16 @@
 import itertools
 
-from matplotlib.pyplot import tight_layout, figure, subplots_adjust
+from matplotlib.pyplot import tight_layout, figure#, subplots_adjust
 from matplotlib.pyplot import subplot, savefig, show, setp
 import matplotlib.gridspec
 
 import numpy as np
 
 
-def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
+def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
                       min_val=None, max_val=1000, grey_factor=1, linefactors=None,
-                      user_fontsize=20, dpi=100):
+                      user_fontsize=20, dpi=100,
+                      metric="runtime"):
     '''
         method to generate a scatter plot 
         Args:
@@ -19,8 +20,6 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
                 performance values of the other algorithm
             title: str 
                 title of plot
-            save: str
-                save plot to disk -- if not set, show plot
             debug: bool
                 some debug options
             min_val: float
@@ -35,7 +34,8 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
                 font size
             dpi: int
                 resolution
-            
+            metric: str
+                "runtime" or something else
     '''
     
     regular_marker = 'x'
@@ -76,7 +76,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     gs = matplotlib.gridspec.GridSpec(ratio, 1)
     fig = figure(1, dpi=100)
     fig.suptitle(title, fontsize=16)
-    ax1 = subplot(gs[0:ratio, :], aspect='equal')
+    ax1 = subplot(aspect='equal')
     ax1.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
 
     # set initial limits
@@ -91,26 +91,29 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     out_up = auto_max_val
     out_lo = max(10**-6, auto_min_val)
 
-    ax1.plot([out_lo, out_up], [out_lo, out_up], c=c_angle_bisector)
 
-    if linefactors is not None:
-        for f in linefactors:
-            c = ref_colors.next()
-            # Lower reference lines
-            ax1.plot([f*out_lo, out_up], [out_lo, (1.0/f)*out_up], c=c,
-                     linestyle=st_ref, linewidth=size*1.5)
-            # Upper reference lines
-            ax1.plot([out_lo, (1.0/f)*out_up], [f*out_lo, out_up], c=c,
-                     linestyle=st_ref, linewidth=size*1.5)
-            offset = 1.1
-            if int(f) == f:
-                lf_str = "%dx" % f
-            else:
-                lf_str = "%2.1fx" % f
-            ax1.text((1.0/f)*out_up, out_up*offset, lf_str, color=c,
-                     fontsize=linefactor_size)
-            ax1.text(out_up*offset, (1.0/f)*out_up, lf_str, color=c,
-                     fontsize=linefactor_size)
+    if metric == "runtime":
+        
+        ax1.plot([out_lo, out_up], [out_lo, out_up], c=c_angle_bisector)
+    
+        if linefactors is not None:
+            for f in linefactors:
+                c = next(ref_colors)
+                # Lower reference lines
+                ax1.plot([f*out_lo, out_up], [out_lo, (1.0/f)*out_up], c=c,
+                         linestyle=st_ref, linewidth=size*1.5)
+                # Upper reference lines
+                ax1.plot([out_lo, (1.0/f)*out_up], [f*out_lo, out_up], c=c,
+                         linestyle=st_ref, linewidth=size*1.5)
+                offset = 1.1
+                if int(f) == f:
+                    lf_str = "%dx" % f
+                else:
+                    lf_str = "%2.1fx" % f
+                ax1.text((1.0/f)*out_up, out_up*offset+1000, lf_str, color=c,
+                         fontsize=linefactor_size)
+                ax1.text(out_up*offset+1000, (1.0/f)*out_up, lf_str, color=c,
+                         fontsize=linefactor_size)
 
 
     #######
@@ -142,19 +145,21 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     ax1.scatter(x_data[rest_idx], y_data[rest_idx], marker=regular_marker,
                 c=c_other_points)
 
-    # max_val lines
-    ax1.plot([maximum_value, maximum_value], [auto_min_val, maximum_value],
-             c=c_other_points, linestyle="--", zorder=0, linewidth=size)
-    ax1.plot([auto_min_val, maximum_value], [maximum_value, maximum_value],
-             c=c_other_points, linestyle="--", zorder=0, linewidth=size)
+    if metric == "runtime":
 
-    # Timeout points
-    ax1.scatter([timeout_val]*len(timeout_x), y_data[timeout_x],
-                marker=timeout_marker, c=c_other_points)
-    ax1.scatter([timeout_val]*len(timeout_both), [timeout_val]*len(timeout_both),
-                marker=timeout_marker, c=c_other_points)
-    ax1.scatter(x_data[timeout_y], [timeout_val]*len(timeout_y),
-                marker=timeout_marker, c=c_other_points)
+        # max_val lines
+        ax1.plot([maximum_value, maximum_value], [auto_min_val, maximum_value],
+                 c=c_other_points, linestyle="--", zorder=0, linewidth=size)
+        ax1.plot([auto_min_val, maximum_value], [maximum_value, maximum_value],
+                 c=c_other_points, linestyle="--", zorder=0, linewidth=size)
+    
+        # Timeout points
+        ax1.scatter([timeout_val]*len(timeout_x), y_data[timeout_x],
+                    marker=timeout_marker, c=c_other_points)
+        ax1.scatter([timeout_val]*len(timeout_both), [timeout_val]*len(timeout_both),
+                    marker=timeout_marker, c=c_other_points)
+        ax1.scatter(x_data[timeout_y], [timeout_val]*len(timeout_y),
+                    marker=timeout_marker, c=c_other_points)
 
     # Plot timeout line
 #    ax1.plot([timeout_val, timeout_val], [auto_min_val, timeout_val],
@@ -168,8 +173,9 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
                     label="original data")
 
     # Set axes scale and limits
-    ax1.set_xscale("log")
-    ax1.set_yscale("log")
+    if metric == "runtime":
+        ax1.set_xscale("log")
+        ax1.set_yscale("log")
 
     # Set axes labels
     ax1.set_xlabel(labels[0], fontsize=label_size)
@@ -180,9 +186,8 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
         leg = ax1.legend(loc='best', fancybox=True)
         leg.get_frame().set_alpha(0.5)
 
-    # Save or show figure
     tight_layout()
-    subplots_adjust(top=0.85)
+    #subplots_adjust(top=0.85, bottom=0.84)
 
     max_val = timeout_val*2
     auto_min_val *= 0.9
@@ -207,69 +212,71 @@ def plot_scatter_plot(x_data, y_data, labels, title="", save="", debug=False,
     else:
         maximum_str = r"$%5.2f$" % maximum_value
 
-    if int(np.log10(maximum_value)) != np.log10(maximum_value):
-        # If we do not already have this ticklabel as a regular label
-        ax1.text(ax1.get_ylim()[0] - 0.1 * np.abs(ax1.get_ylim()[0]),
-                 maximum_value,
-                 maximum_str,
-                 horizontalalignment='right', verticalalignment="center",
-                 fontsize=user_fontsize)
-        ax1.text(maximum_value,
+    if metric == "runtime":
+
+        if int(np.log10(maximum_value)) != np.log10(maximum_value):
+            # If we do not already have this ticklabel as a regular label
+            ax1.text(ax1.get_ylim()[0] - 0.1 * np.abs(ax1.get_ylim()[0]),
+                     maximum_value,
+                     maximum_str,
+                     horizontalalignment='right', verticalalignment="center",
+                     fontsize=user_fontsize)
+            ax1.text(maximum_value,
+                     ax1.get_ylim()[0] - 0.1 * np.abs(ax1.get_ylim()[0]),
+                     maximum_str,
+                     horizontalalignment='center', verticalalignment="top",
+                     fontsize=user_fontsize)
+    
+        # Plot 'timeout'
+        ax1.text(ax1.get_xlim()[0] - 0.1 * np.abs(ax1.get_ylim()[0]),
+                 timeout_val,
+                 "timeout ", horizontalalignment='right',
+                 verticalalignment="center", fontsize=user_fontsize)
+        ax1.text(timeout_val,
                  ax1.get_ylim()[0] - 0.1 * np.abs(ax1.get_ylim()[0]),
-                 maximum_str,
-                 horizontalalignment='center', verticalalignment="top",
-                 fontsize=user_fontsize)
+                 "timeout ",  horizontalalignment='center', verticalalignment="top",
+                 fontsize=user_fontsize, rotation=30)
 
-    # Plot 'timeout'
-    ax1.text(ax1.get_xlim()[0] - 0.1 * np.abs(ax1.get_ylim()[0]),
-             timeout_val,
-             "timeout ", horizontalalignment='right',
-             verticalalignment="center", fontsize=user_fontsize)
-    ax1.text(timeout_val,
-             ax1.get_ylim()[0] - 0.1 * np.abs(ax1.get_ylim()[0]),
-             "timeout ",  horizontalalignment='center', verticalalignment="top",
-             fontsize=user_fontsize, rotation=45)
-
-    #########
-    # Adjust ticks > max_val
-    ax1.xaxis.set_ticks_position('bottom')
-    ax1.yaxis.set_ticks_position('left')
-    # major axes
-    for tic in ax1.xaxis.get_major_ticks():
-        if tic._loc > maximum_value:
-            tic.tick1On = tic.tick2On = False
-    for tic in ax1.yaxis.get_major_ticks():
-        if tic._loc > maximum_value:
-            tic.tick1On = tic.tick2On = False
-
-    # minor axes
-    for tic in ax1.xaxis.get_minor_ticks():
-        if tic._loc > maximum_value:
-            tic.tick1On = tic.tick2On = False
-    for tic in ax1.yaxis.get_minor_ticks():
-        if tic._loc > maximum_value:
-            tic.tick1On = tic.tick2On = False
-
-    # tick labels
-    ticks_x = ax1.get_xticks()
-    new_ticks_label = list()
-    for l_idx in range(len(ticks_x)):
-        if ticks_x[l_idx] < maximum_value:
-            new_ticks_label.append(ticks_x[l_idx])
-    ax1.set_xticklabels(new_ticks_label)  # , rotation=45)
-
-    ticks_y = ax1.get_yticks()
-    new_ticks_label = list()
-    for l_idx in range(len(ticks_y)):
-        if ticks_x[l_idx] < maximum_value:
-            if 0 < ticks_x[l_idx] < 1:
-                new_ticks_label.append(str(r"$10^{%d}$" % int(np.log10(ticks_x[l_idx]))))
-            if 1 <= ticks_x[l_idx] < 1000:
-                new_ticks_label.append(str(r"$%d^{ }$" % int(ticks_x[l_idx])))
-            if 1000 <= ticks_x[l_idx]:
-                new_ticks_label.append(str(r"$10^{%d}$" % int(np.log10(ticks_x[l_idx]))))
-    ax1.set_yticklabels(new_ticks_label)  # , rotation=45)
-    ax1.set_xticklabels(new_ticks_label)
+        #########
+        # Adjust ticks > max_val
+        ax1.xaxis.set_ticks_position('bottom')
+        ax1.yaxis.set_ticks_position('left')
+        # major axes
+        for tic in ax1.xaxis.get_major_ticks():
+            if tic._loc > maximum_value:
+                tic.tick1On = tic.tick2On = False
+        for tic in ax1.yaxis.get_major_ticks():
+            if tic._loc > maximum_value:
+                tic.tick1On = tic.tick2On = False
+    
+        # minor axes
+        for tic in ax1.xaxis.get_minor_ticks():
+            if tic._loc > maximum_value:
+                tic.tick1On = tic.tick2On = False
+        for tic in ax1.yaxis.get_minor_ticks():
+            if tic._loc > maximum_value:
+                tic.tick1On = tic.tick2On = False
+    
+        # tick labels
+        ticks_x = ax1.get_xticks()
+        new_ticks_label = list()
+        for l_idx in range(len(ticks_x)):
+            if ticks_x[l_idx] < maximum_value:
+                new_ticks_label.append(ticks_x[l_idx])
+        ax1.set_xticklabels(new_ticks_label)  # , rotation=45)
+    
+        ticks_y = ax1.get_yticks()
+        new_ticks_label = list()
+        for l_idx in range(len(ticks_y)):
+            if ticks_x[l_idx] < maximum_value:
+                if 0 < ticks_x[l_idx] < 1:
+                    new_ticks_label.append(str(r"$10^{%d}$" % int(np.log10(ticks_x[l_idx]))))
+                if 1 <= ticks_x[l_idx] < 1000:
+                    new_ticks_label.append(str(r"$%d^{ }$" % int(ticks_x[l_idx])))
+                if 1000 <= ticks_x[l_idx]:
+                    new_ticks_label.append(str(r"$10^{%d}$" % int(np.log10(ticks_x[l_idx]))))
+        ax1.set_yticklabels(new_ticks_label)  # , rotation=45)
+        ax1.set_xticklabels(new_ticks_label)
 
     # Change fontsize for ticklabels
     setp(ax1.get_yticklabels(), fontsize=ticklabel_size)

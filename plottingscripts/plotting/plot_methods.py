@@ -10,7 +10,7 @@ import plottingscripts.utils.plot_util as plot_util
 
 def plot_optimization_trace(times, performance_list, title, name_list,
                             logx=True, logy=False, y_min=None, y_max=None,
-                            x_min=None, x_max=None, ylabel="performance",
+                            x_min=None, x_max=None, ylabel="Performance",
                             properties=None):
     '''
     plots a median optimization trace based one time array
@@ -46,14 +46,14 @@ def plot_optimization_trace(times, performance_list, title, name_list,
     if title is not None:
         fig.suptitle(title, fontsize=int(properties["titlefontsize"]))
 
-    auto_y_min = sys.maxint
-    auto_y_max = -sys.maxint
-    auto_x_min = sys.maxint
+    auto_y_min = 2**64
+    auto_y_max = -2**64
+    auto_x_min = 2**64
 
     for idx, performance in enumerate(performance_list):
-        color = properties["colors"].next()
-        marker = properties["markers"].next()
-        linestyle = properties["linestyles"].next()
+        color = next(properties["colors"])
+        marker = next(properties["markers"])
+        linestyle = next(properties["linestyles"])
         name_list[idx] = name_list[idx].replace("_", " ")
         median = np.median(performance, axis=0)
         upper_quartile = np.percentile(performance, q=75, axis=0)
@@ -93,7 +93,10 @@ def plot_optimization_trace(times, performance_list, title, name_list,
             # median stays the same for > 1 evaluations
             auto_x_min = min(times[init_idx], auto_x_min)
 
-        from_ = max(init_idx, x_min)
+        if x_min:
+            from_ = max(init_idx, x_min)
+        else:
+            from_ = init_idx
         auto_y_max = max(max(upper_quartile[from_:]), auto_y_max)
     auto_x_max = times[-1]
 
@@ -110,7 +113,7 @@ def plot_optimization_trace(times, performance_list, title, name_list,
         ax1.set_ylim([y_min, auto_y_max + 0.01*abs(auto_y_max - y_min)])
     elif y_max is not None and y_min is None:
         ax1.set_ylim([auto_y_min - 0.01*abs(auto_y_max - y_min), y_max])
-    elif y_max > y_min and y_max is not None and y_min is not None:
+    elif y_max is not None and y_min is not None and y_max > y_min:
         ax1.set_ylim([y_min, y_max])
     else:
         ax1.set_ylim([auto_y_min - 0.01*abs(auto_y_max - auto_y_min), auto_y_max + 0.01*abs(auto_y_max - auto_y_min)])
@@ -119,7 +122,7 @@ def plot_optimization_trace(times, performance_list, title, name_list,
         ax1.set_xlim([x_min - 0.1*abs(x_min), auto_x_max + 0.1*abs(auto_x_max)])
     elif x_max is not None and x_min is None:
         ax1.set_xlim([auto_x_min - 0.1*abs(auto_x_min), x_max + 0.1*abs(x_max)])
-    elif x_max > x_min and x_max is not None and x_min is not None:
+    elif x_max is not None and x_min is not None and x_max > x_min:
         ax1.set_xlim([x_min, x_max])
     else:
         ax1.set_xlim([auto_x_min - 0.1*abs(auto_x_min), auto_x_max + 0.1*abs(auto_x_max)])
@@ -159,17 +162,17 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
     if title is not None:
         fig.suptitle(title, fontsize=int(properties["titlefontsize"]))
 
-    auto_y_min = sys.maxint
-    auto_y_max = -sys.maxint
-    auto_x_min = sys.maxint
-    auto_x_max = -sys.maxint
+    auto_y_min = 2**64
+    auto_y_max = -2**64
+    auto_x_min = 2**64
+    auto_x_max = -2**64
 
     for idx, performance in enumerate(performance_list):
         performance = np.array(performance)
 
-        color = properties["colors"].next()
-        marker = properties["markers"].next()
-        linestyle = properties["linestyles"].next()
+        color = next(properties["colors"])
+        marker = next(properties["markers"])
+        linestyle = next(properties["linestyles"])
         name_list[idx] = name_list[idx].replace("_", " ")
 
         if logx and time_list[idx][0] == 0:

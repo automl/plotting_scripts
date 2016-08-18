@@ -6,13 +6,13 @@ import re
 def read_csv(fn, has_header=True, data_type=str):
     data = list()
     header = None
-    with open(fn, 'rb') as csvfile:
+    with open(fn, 'r') as csvfile:
         csv_reader = csv.reader(csvfile, delimiter=',', quotechar='|')
         for row in csv_reader:
             if header is None and has_header:
                 header = row
                 continue
-            data.append(map(data_type, [i.strip() for i in row]))
+            data.append(list(map(data_type, [i.strip() for i in row])))
     return header, data
 
 

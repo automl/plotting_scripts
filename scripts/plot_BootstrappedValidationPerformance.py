@@ -53,7 +53,8 @@ def main():
                         help="n*m; For each non-GGA experiment draw n times m "
                              "trajectories and plot best of train")
     parser.add_argument("--seed", default=None, type=int, dest="seed",
-                        help="Seed for reproducibility")
+                        help="Seed for reproducibility."
+                             "Will be used for every Bootstrap sampling")
 
     # Properties
     # We need this to show defaults for -h
@@ -64,9 +65,6 @@ def main():
     args, unknown = parser.parse_known_args()
 
     sys.stdout.write("\nFound " + str(len(unknown)) + " arguments\n")
-
-    if args.seed is not None:
-        np.random.seed(args.seed)
 
     # Calc bootstrap samples
     bootstrap_repetitions, bootstrap_samples = [int(i) for i
@@ -145,7 +143,7 @@ def main():
                     # sample #bootstrap-sample-size idxs
                     sample_idx = helper.bootstrap_sample_idx(
                             num_samples=len(tmp_tst_perf_list),
-                            boot_strap_size=bootstrap_samples)
+                            boot_strap_size=bootstrap_samples, rng=args.seed)
                     # then get test value of best train
                     best_train = np.argmin(tmp_trn_perf_list[sample_idx, t])
                     # and use this as new performance for pseudorun i at time t

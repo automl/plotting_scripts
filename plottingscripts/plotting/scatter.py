@@ -11,8 +11,8 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
                       min_val=None, max_val=1000, grey_factor=1,
                       linefactors=None, user_fontsize=20, dpi=100,
                       metric="runtime"):
-    '''
-        method to generate a scatter plot 
+    """
+        method to generate a scatter plot
         Args:
             x_data: numpy.array
                 performance values of one algorithm
@@ -38,7 +38,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
                 resolution
             metric: str
                 "runtime" or something else
-    '''
+    """
     
     regular_marker = 'x'
     timeout_marker = '+'

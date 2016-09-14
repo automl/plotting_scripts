@@ -8,8 +8,8 @@ import numpy as np
 
 
 def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
-                      min_val=None, max_val=1000, grey_factor=1, linefactors=None,
-                      user_fontsize=20, dpi=100,
+                      min_val=None, max_val=1000, grey_factor=1,
+                      linefactors=None, user_fontsize=20, dpi=100,
                       metric="runtime"):
     '''
         method to generate a scatter plot 
@@ -18,7 +18,9 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
                 performance values of one algorithm
             y_data: numpy.array
                 performance values of the other algorithm
-            title: str 
+            labels: tuple
+                (xlabel, ylabel)
+            title: str
                 title of plot
             debug: bool
                 some debug options
@@ -51,7 +53,8 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
     linefactor_size = user_fontsize - 2
     label_size = user_fontsize + 1
 
-    #------
+    #
+    # ------
     # maximum_value: location for timeout points
     # max_val      : Initially user-defined timeout, then set to axes limit
     # time_out_val : location for timeout points
@@ -72,8 +75,6 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
                                  ])
 
     # Set up figure
-    ratio = 1
-    gs = matplotlib.gridspec.GridSpec(ratio, 1)
     fig = figure(1, dpi=100)
     fig.suptitle(title, fontsize=16)
     ax1 = subplot(aspect='equal')
@@ -85,15 +86,13 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
     else:
         auto_min_val = min([min(x_data), min(y_data)])
     auto_max_val = maximum_value
-    timeout_val = maximum_value * 2 #+ 10**int((np.log10(max_val)))
+    timeout_val = maximum_value * 2
 
     # Plot angle bisector and reference_lines
     out_up = auto_max_val
     out_lo = max(10**-6, auto_min_val)
 
-
     if metric == "runtime":
-        
         ax1.plot([out_lo, out_up], [out_lo, out_up], c=c_angle_bisector)
     
         if linefactors is not None:
@@ -114,7 +113,6 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
                          fontsize=linefactor_size)
                 ax1.text(out_up*offset+1000, (1.0/f)*out_up, lf_str, color=c,
                          fontsize=linefactor_size)
-
 
     #######
     #  Scatter
@@ -156,7 +154,8 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
         # Timeout points
         ax1.scatter([timeout_val]*len(timeout_x), y_data[timeout_x],
                     marker=timeout_marker, c=c_other_points)
-        ax1.scatter([timeout_val]*len(timeout_both), [timeout_val]*len(timeout_both),
+        ax1.scatter([timeout_val]*len(timeout_both),
+                    [timeout_val]*len(timeout_both),
                     marker=timeout_marker, c=c_other_points)
         ax1.scatter(x_data[timeout_y], [timeout_val]*len(timeout_y),
                     marker=timeout_marker, c=c_other_points)
@@ -187,7 +186,6 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
         leg.get_frame().set_alpha(0.5)
 
     tight_layout()
-    #subplots_adjust(top=0.85, bottom=0.84)
 
     max_val = timeout_val*2
     auto_min_val *= 0.9
@@ -234,7 +232,8 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
                  verticalalignment="center", fontsize=user_fontsize)
         ax1.text(timeout_val,
                  ax1.get_ylim()[0] - 0.1 * np.abs(ax1.get_ylim()[0]),
-                 "timeout ",  horizontalalignment='center', verticalalignment="top",
+                 "timeout ",  horizontalalignment='center',
+                 verticalalignment="top",
                  fontsize=user_fontsize, rotation=30)
 
         #########
@@ -270,11 +269,14 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
         for l_idx in range(len(ticks_y)):
             if ticks_x[l_idx] < maximum_value:
                 if 0 < ticks_x[l_idx] < 1:
-                    new_ticks_label.append(str(r"$10^{%d}$" % int(np.log10(ticks_x[l_idx]))))
+                    new_ticks_label.append(str(r"$10^{%d}$" %
+                                               int(np.log10(ticks_x[l_idx]))))
                 if 1 <= ticks_x[l_idx] < 1000:
-                    new_ticks_label.append(str(r"$%d^{ }$" % int(ticks_x[l_idx])))
+                    new_ticks_label.append(str(r"$%d^{ }$" %
+                                               int(ticks_x[l_idx])))
                 if 1000 <= ticks_x[l_idx]:
-                    new_ticks_label.append(str(r"$10^{%d}$" % int(np.log10(ticks_x[l_idx]))))
+                    new_ticks_label.append(str(r"$10^{%d}$" %
+                                               int(np.log10(ticks_x[l_idx]))))
         ax1.set_yticklabels(new_ticks_label)  # , rotation=45)
         ax1.set_xticklabels(new_ticks_label)
 

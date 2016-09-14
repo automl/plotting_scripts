@@ -8,7 +8,7 @@ import numpy as np
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from plottingscripts.utils import read_util, plot_util
+from plottingscripts.utils import read_util, plot_util, helper
 import plottingscripts.plotting.plot_methods as plot_methods
 import plottingscripts.utils.macros
 
@@ -76,19 +76,6 @@ def main():
             args.ylabel = "%s performance on test instances" % \
                           args.agglomeration
 
-    # Set up properties
-    properties = {}
-    args_dict = vars(args)
-    for key in defaults:
-        properties[key] = args_dict[key]
-        try:
-            properties[key] = float(properties[key])
-            if int(properties[key]) == properties[key]:
-                properties[key] = int(properties[key])
-        except ValueError:
-            # Value is not an integer
-            continue
-
     # Get files and names
     file_list, name_list = read_util.get_file_and_name_list(unknown,
                                                             match_file='.csv')
@@ -147,6 +134,7 @@ def main():
     if args.xmin is None and show_from != 0:
         args.xmin = show_from
 
+    properties = helper.fill_property_dict(arguments=args, defaults=defaults)
     new_time_list = [time_ for i in range(len(performance))]
     fig = plot_methods.\
         plot_optimization_trace_mult_exp(time_list=new_time_list,

@@ -1,6 +1,5 @@
 import csv
 import os
-import re
 
 
 def read_csv(fn, has_header=True, data_type=str):
@@ -27,10 +26,11 @@ def get_file_and_name_list(argument_list, match_file, len_name=1):
     file_list = list()
     len_desc = 0
     for i in range(len(argument_list)):
-        if not match_file in argument_list[i] and len_desc == len_name:
+        if match_file not in argument_list[i] and len_desc == len_name:
             # We have all names, but next argument is not a file
-            raise ValueError("You need at least one %s file per Experiment, %s has none" % (match_file, name_list[-1]))
-        elif not match_file in argument_list[i] and len_desc < len_name:
+            raise ValueError("You need at least one %s file per Experiment, "
+                             "%s has none" % (match_file, name_list[-1]))
+        elif match_file not in argument_list[i] and len_desc < len_name:
             # We start with a new name desc
             if len_name > 1 and len_desc == 0:
                 name_list.append(list([argument_list[i], ]))
@@ -110,19 +110,12 @@ def read_validationObjectiveMatrix_file(fn):
     with open(fn, 'r') as fh:
         header = fh.readline().split(",")
         num_configs = len(header) - 2
-        #re_string = '\w?,\w?'.join(['"(.*)"', '"(-?\d*)"'] +
-        #                           ['"([0-9.]*)"'] * num_configs)
         for line in fh.readlines():
-            #match = (re.match(re_string, line))
-            #if match.group(1) in values:
-            #    print("Cannot handle more than one seed per instance")
-            #values[match.group(1)] = \
-            #    list(map(float,
-            #             list(map(match.group, list(range(3, 3+num_configs))))))
             line = line.split(",")
             inst = line[0].strip().replace('"', '').replace("'", "")
             if inst in values:
-                raise ValueError("Cannot handle more than one seed per instance")
+                raise ValueError("Cannot handle more than one "
+                                 "seed per instance")
             values[inst] = [float(i.strip().replace('"', '').replace("'", ""))
                             for i in line[2:]]
             assert len(values[inst]) == num_configs

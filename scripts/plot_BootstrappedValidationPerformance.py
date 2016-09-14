@@ -10,10 +10,12 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from plottingscripts.utils import read_util, plot_util, helper
 import plottingscripts.plotting.plot_methods as plot_methods
+import plottingscripts.utils.macros
 
 
 def main():
-    prog = "python plot_BootstrappedValidationPerformance.py <WhatIsThis> one/or/many/*ClassicValidationResults*.csv"
+    prog = "python plot_BootstrappedValidationPerformance.py <WhatIsThis> " \
+           "one/or/many/*ClassicValidationResults*.csv"
     description = "Plot a median trace with quantiles for multiple experiments"
 
     parser = ArgumentParser(description=description, prog=prog)
@@ -39,8 +41,8 @@ def main():
     parser.add_argument("-t", "--title", dest="title",
                         default="", help="Optional supertitle for plot")
     parser.add_argument("--maxvalue", dest="maxvalue", type=float,
-                        default=sys.maxint, help="Replace all values higher "
-                                                 "than this?")
+                        default=plottingscripts.utils.macros.MAXINT,
+                        help="Replace all values higher than this?")
     parser.add_argument("--agglomeration", dest="agglomeration", type=str,
                         default="median", choices=("median", "mean"),
                         help="Plot mean or median")
@@ -69,11 +71,11 @@ def main():
     # Calc bootstrap samples
     bootstrap_repetitions, bootstrap_samples = [int(i) for i
                                                 in args.bootstrap.split("x")]
-    print "[BOOTSTRAP] Do %d repetition with %d samples each" % \
-          (bootstrap_repetitions, bootstrap_samples)
+    print("[BOOTSTRAP] Do %d repetition with %d samples each" %
+          (bootstrap_repetitions, bootstrap_samples))
 
     if len(unknown) < 2:
-        print "To less arguments given"
+        print("To less arguments given")
         parser.print_help()
         sys.exit(1)
 
@@ -89,7 +91,8 @@ def main():
     file_list, name_list = read_util.get_file_and_name_list(unknown,
                                                             match_file='.csv')
     for idx in range(len(name_list)):
-        print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))
+        print("%20s contains %d file(s)" %
+              (name_list[idx], len(file_list[idx])))
 
     if args.verbose:
         name_list = [name_list[i] + " (" + str(len(file_list[i])) + ")" for i
@@ -98,7 +101,7 @@ def main():
     # Get data from csv
     performance = list()
     time_ = list()
-    show_from = -sys.maxint
+    show_from = -plottingscripts.utils.macros.MAXINT
 
     for name in range(len(name_list)):
         # We have a new experiment
@@ -132,7 +135,7 @@ def main():
 
         # If not GGA draw bootstrap samples
         if "GGA" not in name_list[name]:
-            print "Bootstrap %s" % name_list[name]
+            print("Bootstrap %s" % name_list[name])
             new_performance = np.zeros([bootstrap_repetitions,
                                         tmp_tst_perf_list.shape[1]])
             for t in range(tmp_tst_perf_list.shape[1]):
@@ -154,39 +157,31 @@ def main():
     performance = [np.array(i) for i in performance]
 
     time_ = np.array(time_).flatten()
-    print time_.shape
-    print [p.shape for p in performance]
+    print(time_.shape)
+    print([p.shape for p in performance])
 
     if args.xmin is None and show_from != 0:
         args.xmin = show_from
 
-    properties = {}
-    args_dict = vars(args)
-    for key in defaults:
-        properties[key] = args_dict[key]
-        try:
-            properties[key] = float(properties[key])
-            if int(properties[key]) == properties[key]:
-                properties[key] = int(properties[key])
-        except:
-            continue
+    properties = helper.fill_property_dict(arguments=args, defaults=defaults)
 
     new_time_list = [time_ for i in range(len(performance))]
-    fig = plot_methods.plot_optimization_trace_mult_exp(time_list=new_time_list,
-                                                        performance_list=performance,
-                                                        title=args.title,
-                                                        name_list=name_list,
-                                                        logx=args.logx,
-                                                        logy=args.logy,
-                                                        y_min=args.ymin,
-                                                        y_max=args.ymax,
-                                                        x_min=args.xmin,
-                                                        x_max=args.xmax,
-                                                        agglomeration=args.agglomeration,
-                                                        ylabel=args.ylabel,
-                                                        properties=properties)
+    fig = plot_methods.\
+        plot_optimization_trace_mult_exp(time_list=new_time_list,
+                                         performance_list=performance,
+                                         title=args.title,
+                                         name_list=name_list,
+                                         logx=args.logx,
+                                         logy=args.logy,
+                                         y_min=args.ymin,
+                                         y_max=args.ymax,
+                                         x_min=args.xmin,
+                                         x_max=args.xmax,
+                                         agglomeration=args.agglomeration,
+                                         ylabel=args.ylabel,
+                                         properties=properties)
     if args.save != "":
-        print "Save plot to %s" % args.save
+        print("Save plot to %s" % args.save)
         plot_util.save_plot(fig, args.save, plot_util.get_defaults()['dpi'])
     else:
         fig.show()

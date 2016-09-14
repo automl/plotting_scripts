@@ -9,10 +9,11 @@ from plottingscripts.utils import read_util, plot_util
 import plottingscripts.plotting.plot_methods as plot_methods
 import plottingscripts.utils.merge_test_performance_different_times as \
     merge_test_performance_different_times
+import plottingscripts.utils.macros
 
 
 def main():
-    prog = "python plot_performance <WhatIsThis> one/or/many/runs_and_results*.csv"
+    prog = "python plot_performance <WhatIsThis> one/or/many/runs_and_res*.csv"
     description = "Plot a median trace with quantiles for multiple experiments"
 
     parser = ArgumentParser(description=description, prog=prog,
@@ -34,7 +35,7 @@ def main():
     parser.add_argument("-t", "--title", dest="title", default="",
                         help="Optional supertitle for plot")
     parser.add_argument("--maxvalue", dest="maxvalue", type=float,
-                        default=sys.maxint,
+                        default=plottingscripts.utils.macros.MAXINT,
                         help="Replace all values higher than this?")
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true",
                         default=False, help="print number of runs on plot")
@@ -50,7 +51,7 @@ def main():
     sys.stdout.write("\nFound " + str(len(unknown)) + " arguments\n")
 
     if len(unknown) < 2:
-        print "To less arguments given"
+        print("To less arguments given")
         parser.print_help()
         sys.exit(1)
 
@@ -58,7 +59,8 @@ def main():
     file_list, name_list = read_util.get_file_and_name_list(unknown,
                                                             match_file=".")
     for idx in range(len(name_list)):
-        print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))
+        print("%20s contains %d file(s)" %
+              (name_list[idx], len(file_list[idx])))
 
     if args.verbose:
         name_list = [name_list[i] + " (" + str(len(file_list[i])) + ")"
@@ -68,7 +70,7 @@ def main():
     performance_list = list()
     time_list = list()
 
-    show_from = -sys.maxint
+    show_from = -plottingscripts.utils.macros.MAXINT
 
     for name in range(len(name_list)):
         # We have a new experiment
@@ -88,10 +90,9 @@ def main():
             performance.append(data)
             time_.append([float(i.strip()) for i in csv_data[:, 0]])
         if len(time_) > 1:
-            print len(time_)
             performance, time_ = merge_test_performance_different_times.\
                 fill_trajectory(performance_list=performance, time_list=time_)
-            print performance[0][:10]
+            print(performance[0][:10])
         else:
             time_ = time_[0]
         performance = [np.array(i) for i in performance]
@@ -102,20 +103,21 @@ def main():
     if args.xmin is None and show_from != 0:
         args.xmin = show_from
 
-    fig = plot_methods.plot_optimization_trace_mult_exp(time_list=time_list,
-                                                        performance_list=performance_list,
-                                                        title=args.title,
-                                                        name_list=name_list,
-                                                        logx=args.log, logy=False,
-                                                        agglomeration=args.agglomeration,
-                                                        y_min=args.ymin,
-                                                        y_max=args.ymax,
-                                                        x_min=args.xmin,
-                                                        x_max=args.xmax,
-                                                        ylabel=args.ylabel)
+    fig = plot_methods.\
+        plot_optimization_trace_mult_exp(time_list=time_list,
+                                         performance_list=performance_list,
+                                         title=args.title,
+                                         name_list=name_list,
+                                         logx=args.log, logy=False,
+                                         agglomeration=args.agglomeration,
+                                         y_min=args.ymin,
+                                         y_max=args.ymax,
+                                         x_min=args.xmin,
+                                         x_max=args.xmax,
+                                         ylabel=args.ylabel)
 
     if args.save != "":
-        print "Save plot to %s" % args.save
+        print("Save plot to %s" % args.save)
         plot_util.save_plot(fig, args.save, plot_util.get_defaults()['dpi'])
     else:
         fig.show()

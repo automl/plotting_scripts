@@ -248,7 +248,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
         for tic in ax1.yaxis.get_major_ticks():
             if tic._loc > maximum_value:
                 tic.tick1On = tic.tick2On = False
-    
+
         # minor axes
         for tic in ax1.xaxis.get_minor_ticks():
             if tic._loc > maximum_value:
@@ -256,7 +256,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
         for tic in ax1.yaxis.get_minor_ticks():
             if tic._loc > maximum_value:
                 tic.tick1On = tic.tick2On = False
-    
+
         # tick labels
         ticks_x = ax1.get_xticks()
         new_ticks_label = list()
@@ -264,7 +264,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
             if ticks_x[l_idx] < maximum_value:
                 new_ticks_label.append(ticks_x[l_idx])
         ax1.set_xticklabels(new_ticks_label)  # , rotation=45)
-    
+
         ticks_y = ax1.get_yticks()
         new_ticks_label = list()
         for l_idx in range(len(ticks_y)):

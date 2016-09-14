@@ -10,10 +10,12 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from plottingscripts.utils import read_util, plot_util
 import plottingscripts.plotting.plot_methods as plot_methods
+import plottingscripts.utils.macros
 
 
 def main():
-    prog = "python plot_ValidationPerformance.py <WhatIsThis> one/or/many/*ClassicValidationResults*.csv"
+    prog = "python plot_ValidationPerformance.py <WhatIsThis> " \
+           "one/or/many/*ClassicValidationResults*.csv"
     description = "Plot a median trace with quantiles for multiple experiments"
 
     parser = ArgumentParser(description=description, prog=prog,
@@ -34,19 +36,21 @@ def main():
                         default=None, help="Minimum of the x-axis")
     parser.add_argument("--ylabel", dest="ylabel", default=None,
                         help="Label on y-axis")
-    parser.add_argument("-s", "--save", dest="save",
-                        default="", help="Where to save plot instead of showing it?")
+    parser.add_argument("-s", "--save", dest="save", default="",
+                        help="Where to save plot instead of showing it?")
     parser.add_argument("-t", "--title", dest="title",
                         default="", help="Optional supertitle for plot")
     parser.add_argument("--maxvalue", dest="maxvalue", type=float,
-                        default=sys.maxint, help="Replace all values higher than this?")
+                        default=plottingscripts.utils.macros.MAXINT,
+                        help="Replace all values higher than this?")
     parser.add_argument("--agglomeration", dest="agglomeration", type=str,
                         default="median", choices=("median", "mean"),
                         help="Plot mean or median")
-    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
-                        help="print number of runs on plot")
+    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true",
+                        default=False, help="print number of runs on plot")
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('--train', dest="train",  default=False, action='store_true')
+    group.add_argument('--train', dest="train",  default=False,
+                       action='store_true')
     group.add_argument('--test', dest="test", default=True, action='store_true')
 
     # Properties
@@ -60,15 +64,17 @@ def main():
     sys.stdout.write("\nFound " + str(len(unknown)) + " arguments\n")
 
     if len(unknown) < 2:
-        print "To less arguments given"
+        print("To few arguments given")
         parser.print_help()
         sys.exit(1)
 
     if args.ylabel is None:
         if args.train:
-            args.ylabel = "%s performance on train instances" % args.agglomeration
+            args.ylabel = "%s performance on train instances" % \
+                          args.agglomeration
         else:
-            args.ylabel = "%s performance on test instances" % args.agglomeration
+            args.ylabel = "%s performance on test instances" % \
+                          args.agglomeration
 
     # Set up properties
     properties = {}
@@ -79,21 +85,25 @@ def main():
             properties[key] = float(properties[key])
             if int(properties[key]) == properties[key]:
                 properties[key] = int(properties[key])
-        except:
+        except ValueError:
+            # Value is not an integer
             continue
 
     # Get files and names
-    file_list, name_list = read_util.get_file_and_name_list(unknown, match_file='.csv')
+    file_list, name_list = read_util.get_file_and_name_list(unknown,
+                                                            match_file='.csv')
     for idx in range(len(name_list)):
-        print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))
+        print("%20s contains %d file(s)" %
+              (name_list[idx], len(file_list[idx])))
 
     if args.verbose:
-        name_list = [name_list[i] + " (" + str(len(file_list[i])) + ")" for i in range(len(name_list))]
+        name_list = [name_list[i] + " (" + str(len(file_list[i])) + ")" for
+                     i in range(len(name_list))]
 
     # Get data from csv
     performance = list()
     time_ = list()
-    show_from = -sys.maxint
+    show_from = -plottingscripts.utils.macros.MAXINT
 
     for name in range(len(name_list)):
         # We have a new experiment
@@ -103,12 +113,13 @@ def main():
             csv_data = np.array(csv_data)
             # Replace too high values with args.maxint
             if args.train:
-                data = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 1]]
+                data = [min([args.maxvalue, float(i.strip())]) for i in
+                        csv_data[:, 1]]
             elif args.test:
-                ## print csv_data
-                data = [min([args.maxvalue, float(i.strip())]) for i in csv_data[:, 2]]
+                data = [min([args.maxvalue, float(i.strip())]) for i in
+                        csv_data[:, 2]]
             else:
-                print "This should not happen"
+                print("This should not happen")
             # do we have only non maxint data?
             show_from = max(data.count(args.maxvalue), show_from)
             performance[-1].append(data)
@@ -118,7 +129,8 @@ def main():
                 if time_[0] == time_[1]:
                     time_ = [time_[0], ]
                 else:
-                    raise NotImplementedError(".csv are not using the same times")
+                    raise NotImplementedError(".csv are not using the same "
+                                              "times")
 
     performance = [np.array(i) for i in performance]
 
@@ -126,30 +138,31 @@ def main():
     time_ = np.array(time_).flatten()
 
     if args.train:
-                print "Plot TRAIN performance"
+                print("Plot TRAIN performance")
     elif args.test:
-                print "Plot TEST performance"
+                print("Plot TEST performance")
     else:
-        print "Don't know what I'm printing"
+        print("Don't know what I'm printing")
 
     if args.xmin is None and show_from != 0:
         args.xmin = show_from
 
     new_time_list = [time_ for i in range(len(performance))]
-    fig = plot_methods.plot_optimization_trace_mult_exp(time_list=new_time_list,
-                                                        performance_list=performance,
-                                                        title=args.title,
-                                                        name_list=name_list,
-                                                        logx=args.logx, logy=args.logy,
-                                                        y_min=args.ymin,
-                                                        y_max=args.ymax,
-                                                        x_min=args.xmin,
-                                                        x_max=args.xmax,
-                                                        agglomeration=args.agglomeration,
-                                                        ylabel=args.ylabel,
-                                                        properties=properties)
+    fig = plot_methods.\
+        plot_optimization_trace_mult_exp(time_list=new_time_list,
+                                         performance_list=performance,
+                                         title=args.title,
+                                         name_list=name_list,
+                                         logx=args.logx, logy=args.logy,
+                                         y_min=args.ymin,
+                                         y_max=args.ymax,
+                                         x_min=args.xmin,
+                                         x_max=args.xmax,
+                                         agglomeration=args.agglomeration,
+                                         ylabel=args.ylabel,
+                                         properties=properties)
     if args.save != "":
-        print "Save plot to %s" % args.save
+        print("Save plot to %s" % args.save)
         plot_util.save_plot(fig, args.save, plot_util.get_defaults()['dpi'])
     else:
         fig.show()

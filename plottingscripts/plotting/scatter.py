@@ -86,7 +86,13 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
     else:
         auto_min_val = min([min(x_data), min(y_data)])
     auto_max_val = maximum_value
-    timeout_val = maximum_value * 2
+    
+    if metric == "runtime":
+        timeout_factor = 2
+    else:
+        timeout_factor = 1
+    
+    timeout_val = maximum_value * timeout_factor
 
     # Plot angle bisector and reference_lines
     out_up = auto_max_val
@@ -187,7 +193,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
 
     tight_layout()
 
-    max_val = timeout_val*2
+    max_val = timeout_val * timeout_factor
     auto_min_val *= 0.9
     ax1.set_autoscale_on(False)
     if max_val is not None and min_val is None:

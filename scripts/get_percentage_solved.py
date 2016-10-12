@@ -1,13 +1,17 @@
 #!/usr/bin/env python
 
 from argparse import ArgumentParser
+import os
 import sys
 
 import numpy as np
 import tabulate
 
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 from plottingscripts.utils import read_util, plot_util
 import plottingscripts.plotting.plot_methods as plot_methods
+
 
 def main():
     prog = "python get_percentage_solved.py <WhatIsThis> one/or/many/*RunResultLineMatrix-traj*.csv"
@@ -27,7 +31,7 @@ def main():
     # Get files and names
     file_list, name_list = read_util.get_file_and_name_list(unknown, match_file='.csv')
     for idx in range(len(name_list)):
-        print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))
+        print("%20s contains %d file(s)" % (name_list[idx], len(file_list[idx])))
 
     if args.verbose:
         name_list = [name_list[i] + " (" + str(len(file_list[i])) + ")" for i in range(len(name_list))]
@@ -37,7 +41,7 @@ def main():
     allowed_solutions = ("SAT", "UNSAT", "TIMEOUT", "CRASHED", "KILLED")
     num_instances = None
     for name in range(len(name_list)):
-        print "Read %s" % name_list[name]
+        print("Read %s" % name_list[name])
         # We have a new experiment
         solutions[name_list[name]] = dict()
         for s in allowed_solutions:

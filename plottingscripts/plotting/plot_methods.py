@@ -11,8 +11,8 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
                                      title=None, logy=False, logx=False,
                                      properties=None, y_min=None,
                                      y_max=None, x_min=None, x_max=None,
-                                     ylabel="Performance", scale_std=1,
-                                     agglomeration="mean"):
+                                     ylabel="Performance", xlabel="time [sec]",
+                                     scale_std=1, agglomeration="mean"):
 
     if scale_std != 1 and agglomeration == "median":
         raise ValueError("Can not scale_std when plotting median")
@@ -96,7 +96,7 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
     if logx:
         ax1.set_xscale("log")
         auto_x_min = max(0.1, auto_x_min)
-    ax1.set_xlabel("time [sec]", fontsize=properties["labelfontsize"])
+    ax1.set_xlabel(xlabel, fontsize=properties["labelfontsize"])
 
     leg = ax1.legend(loc='best', fancybox=True,
                      prop={'size': int(properties["legendsize"])})

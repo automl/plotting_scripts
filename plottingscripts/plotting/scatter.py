@@ -11,7 +11,8 @@ import plottingscripts.utils.plot_util as plot_util
 def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
                       min_val=None, max_val=1000, grey_factor=1,
                       linefactors=None, user_fontsize=20, dpi=100,
-                      metric="runtime", jitter_timeout=False):
+                      metric="runtime", jitter_timeout=False,
+                      markers=None, sizes=None):
     """
         method to generate a scatter plot
         Args:
@@ -42,10 +43,25 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
             jitter_timeout: bool
                 Add some noise to remove timeout clutter
     """
-    
-    regular_marker = 'x'
-    timeout_marker = '+'
-    grey_marker = '.'
+
+    if markers is None or len(markers) != 3:
+        regular_marker = 'x'
+        timeout_marker = '+'
+        grey_marker = '.'
+    else:
+        regular_marker = markers[0]
+        timeout_marker = markers[1]
+        grey_marker = markers[2]
+
+    if sizes is None or len(sizes) != 3:
+        s_r = 5
+        s_t = 5
+        s_g = 5
+    else:
+        s_r = sizes[0]
+        s_t = sizes[1]
+        s_g = sizes[2]
+
     c_angle_bisector = "#e41a1c"  # Red
     c_good_points = "#999999"     # Grey
     c_other_points = "k"
@@ -78,7 +94,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
                                  ])
 
     # Set up figure
-    fig = figure(1, dpi=100)
+    fig = figure(1, dpi=dpi)
     fig.suptitle(title, fontsize=16)
     ax1 = subplot(aspect='equal')
     ax1.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
@@ -149,9 +165,9 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
     # Regular points
     if len(grey_idx) > 1:
         ax1.scatter(x_data[grey_idx], y_data[grey_idx], marker=grey_marker,
-                    c=c_good_points)
+                    edgecolor='', facecolor=c_good_points, s=s_g)
     ax1.scatter(x_data[rest_idx], y_data[rest_idx], marker=regular_marker,
-                c=c_other_points)
+                c=c_other_points, s=s_r)
 
     if metric == "runtime":
         # max_val lines
@@ -172,11 +188,11 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
             scat_both = ([timeout_val]*len(timeout_both), [timeout_val]*len(timeout_both))
 
         ax1.scatter(scat_x, y_data[timeout_x],
-                    marker=timeout_marker, c=c_other_points)
+                    marker=timeout_marker, c=c_other_points, s=s_t)
         ax1.scatter(scat_both[0], scat_both[1],
-                    marker=timeout_marker, c=c_other_points)
+                    marker=timeout_marker, c=c_other_points, s=s_t)
         ax1.scatter(x_data[timeout_y], scat_y,
-                    marker=timeout_marker, c=c_other_points)
+                    marker=timeout_marker, c=c_other_points, s=s_t)
 
     # Plot timeout line
 #    ax1.plot([timeout_val, timeout_val], [auto_min_val, timeout_val],
@@ -202,8 +218,6 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
         # Plot legend
         leg = ax1.legend(loc='best', fancybox=True)
         leg.get_frame().set_alpha(0.5)
-
-    tight_layout()
 
     max_val = timeout_val * timeout_factor
     auto_min_val *= 0.9

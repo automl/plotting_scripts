@@ -12,6 +12,8 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from plottingscripts.utils import read_util, plot_util, helper
 import plottingscripts.plotting.plot_methods as plot_methods
 import plottingscripts.utils.macros
+import plottingscripts.utils.merge_test_performance_different_times as \
+    merge_test_performance_different_times
 
 
 def main():
@@ -82,13 +84,14 @@ def main():
     # Get data from csv
     performance = list()
     time_ = list()
-    show_from = -plottingscripts.utils.macros.MAXINT
     name_list_test_train = []
 
     for name in range(len(name_list)):
         # We have a new experiment
         trn_perf = []
         tst_perf = []
+        time_for_name = []
+
         for fl in file_list[name]:
             _none, csv_data = read_util.read_csv(fl, has_header=True)
             csv_data = np.array(csv_data)
@@ -97,43 +100,37 @@ def main():
                           for i in csv_data[:, 1]]
             test_data = [min([args.maxvalue, float(i.strip())])
                          for i in csv_data[:, 2]]
-
-            # do we have only non maxint data?
-            show_from = max(train_data.count(args.maxvalue), show_from)
-            show_from = max(test_data.count(args.maxvalue), show_from)
+            time_data = [float(i.strip()) for i in csv_data[:, 0]]
 
             trn_perf.append(train_data)
             tst_perf.append(test_data)
-            time_.append([float(i.strip()) for i in csv_data[:, 0]])
-            # Check whether we have the same times for all runs
-            if len(time_) == 2:
-                if time_[0] == time_[1]:
-                    time_ = [time_[0], ]
-                else:
-                    raise NotImplementedError(".csv are not using the same "
-                                              "time stamps")
+            time_for_name.append(time_data)
 
+        merged_performances = trn_perf + tst_perf
+        len_trn_perf = len(trn_perf)
+        merged_time = time_for_name + time_for_name
+
+        merged_performances, merged_time = merge_test_performance_different_times.\
+            fill_trajectory(merged_performances, merged_time)
+        trn_perf = merged_performances[:, :len_trn_perf]
+        tst_perf = merged_performances[:, len_trn_perf:]
+
+        # Convert to numpy arrays
         trn_perf = np.array(trn_perf)
         tst_perf = np.array(tst_perf)
+        merged_time = np.array(merged_time)
 
+        # Append performance to global plotting array
         name_list_test_train.append("%s_train" % name_list[name])
-        performance.append(trn_perf)
+        performance.append(trn_perf.transpose())
         name_list_test_train.append("%s_test" % name_list[name])
-        performance.append(tst_perf)
+        performance.append(tst_perf.transpose())
+        # Append the time twice, once for the test, once for the training array
+        time_.append(merged_time)
+        time_.append(merged_time)
 
-        # Just some output
-        best_train = np.argmin(trn_perf[:, -1])
-        print("Test of best train (% 20s): %g (%s)" %
-              (name_list[name], tst_perf[best_train, -1],
-               file_list[name][best_train][-30:]))
-
-    performance = [np.array(i) for i in performance]
-
-    # print time_
-    time_ = np.array(time_).flatten()
-
-    if args.xmin is None and show_from != 0:
-        args.xmin = show_from
+    performance = np.array([np.array(i) for i in performance])
+    time_ = np.array(time_)
 
     properties = helper.fill_property_dict(arguments=args, defaults=defaults)
 
@@ -142,13 +139,15 @@ def main():
         c = []
         cycle = plot_util.get_defaults()["colors"]
         for i in range(10):
-            color = cycle.next()
+            color = next(cycle)
             c.extend([color, color])
         properties["colors"] = itertools.cycle(c)
         properties["markers"] = itertools.cycle([""])
 
     # This plotting function requires a time array for each experiment
-    new_time_list = [time_ for i in range(len(performance))]
+    #new_time_list = np.array([time_ for i in range(len(performance))])
+    new_time_list = np.array(time_)
+
     fig = plot_methods.\
         plot_optimization_trace_mult_exp(time_list=new_time_list,
                                          performance_list=performance,

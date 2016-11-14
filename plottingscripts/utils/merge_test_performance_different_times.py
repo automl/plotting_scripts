@@ -1,9 +1,11 @@
+from collections import OrderedDict
+
 import numpy as np
 import pandas as pd
 
 
 def fill_trajectory(performance_list, time_list, replace_nan=np.NaN):
-    frame_dict = dict()
+    frame_dict = OrderedDict()
     counter = np.arange(0, len(performance_list))
     for p, t, c in zip(performance_list, time_list, counter):
         if len(p) != len(t):
@@ -13,8 +15,6 @@ def fill_trajectory(performance_list, time_list, replace_nan=np.NaN):
 
     merged = pd.DataFrame(frame_dict)
     merged = merged.ffill()
-
-    print(merged.get_values())
 
     performance = merged.get_values()
     time_ = merged.index.values

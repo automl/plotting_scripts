@@ -8,7 +8,7 @@ class plotUtilTest(unittest.TestCase):
 
     def test_get_empty_iterator(self):
         iter_ = plot_util.get_empty_iterator()
-        self.assertEqual(iter_.next(), None)
+        self.assertEqual(next(iter_), None)
         self.assertIsInstance(iter_, itertools.cycle)
 
     def test_get_plot_markers(self):
@@ -29,17 +29,20 @@ class plotUtilTest(unittest.TestCase):
 
     def test_get_defaults(self):
         defaults = plot_util.get_defaults()
-        self.assertEqual(len(defaults), 11)
+        print(defaults)
+        self.assertEqual(len(defaults), 12)
         for key in ("linestyles", "colors", "markers", "markersize",
-                  "labelfontsize", "linewidth", "titlefontsize",
-                  "gridcolor", "gridalpha", "dpi", "legendsize"):
+                    "labelfontsize", "linewidth", "titlefontsize",
+                    "gridcolor", "gridalpha", "dpi", "legendsize",
+                    "ticklabelsize"):
             self.assertTrue(key in defaults)
 
     def test_fill_with_defaults(self):
         filled = plot_util.fill_with_defaults({})
         for key in ("linestyles", "colors", "markers", "markersize",
                     "labelfontsize", "linewidth", "titlefontsize",
-                    "gridcolor", "gridalpha", "dpi", "legendsize"):
+                    "gridcolor", "gridalpha", "dpi", "legendsize",
+                    "ticklabelsize"):
             self.assertTrue(key in filled)
 
         filled = plot_util.fill_with_defaults({'dpi': 50})

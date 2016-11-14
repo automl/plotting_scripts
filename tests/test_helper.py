@@ -14,7 +14,7 @@ class helperTest(unittest.TestCase):
 
         resample_i = helper.bootstrap_sample_idx(num_samples=2,
                                                  boot_strap_size=1000)
-        self.assertEqual(np.int(np.sum(resample_i)/1000*10), 5)
+        self.assertEqual(np.rint(np.sum(resample_i)/1000*10), 5)
 
         # Test random seeds
         np.random.seed(1)

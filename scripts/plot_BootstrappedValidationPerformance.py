@@ -77,13 +77,8 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    args.ylabel = "%s performance on test instances" % args.agglomeration
-
-    # Set up properties
-    prop = {}
-    args_dict = vars(args)
-    for key in defaults:
-        prop[key] = args_dict[key]
+    if args.ylabel:
+        args.ylabel = "%s performance on instances" % args.agglomeration
 
     # Get files and names
     file_list, name_list = read_util.get_file_and_name_list(unknown,
@@ -162,7 +157,6 @@ def main():
         args.xmin = show_from
 
     properties = helper.fill_property_dict(arguments=args, defaults=defaults)
-
     new_time_list = [time_ for i in range(len(performance))]
     fig = plot_methods.\
         plot_optimization_trace_mult_exp(time_list=new_time_list,

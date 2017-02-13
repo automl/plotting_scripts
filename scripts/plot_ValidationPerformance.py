@@ -36,6 +36,8 @@ def main():
                         default=None, help="Minimum of the x-axis")
     parser.add_argument("--ylabel", dest="ylabel", default=None,
                         help="Label on y-axis")
+    parser.add_argument("--xlabel", dest="xlabel", default="time [sec]",
+                        help="Label on x-axis")
     parser.add_argument("-s", "--save", dest="save", default="",
                         help="Where to save plot instead of showing it?")
     parser.add_argument("-t", "--title", dest="title",
@@ -147,7 +149,7 @@ def main():
                                          x_min=args.xmin,
                                          x_max=args.xmax,
                                          agglomeration=args.agglomeration,
-                                         ylabel=args.ylabel,
+                                         ylabel=args.ylabel, xlabel=args.xlabel,
                                          properties=properties)
     if args.save != "":
         print("Save plot to %s" % args.save)

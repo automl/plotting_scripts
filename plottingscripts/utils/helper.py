@@ -49,4 +49,4 @@ def fill_property_dict(arguments, defaults):
         except TypeError:
             properties[key] = properties[key]
 
-    return defaults
+    return properties

@@ -1,16 +1,18 @@
 import itertools
 
-from matplotlib.pyplot import tight_layout, figure#, subplots_adjust
+from matplotlib.pyplot import tight_layout, figure
 from matplotlib.pyplot import subplot, savefig, show, setp
-import matplotlib.gridspec
 
 import numpy as np
+
+import plottingscripts.utils.plot_util as plot_util
 
 
 def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
                       min_val=None, max_val=1000, grey_factor=1,
                       linefactors=None, user_fontsize=20, dpi=100,
-                      metric="runtime"):
+                      metric="runtime", jitter_timeout=False,
+                      markers=None, sizes=None):
     """
         method to generate a scatter plot
         Args:
@@ -38,11 +40,28 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
                 resolution
             metric: str
                 "runtime" or something else
+            jitter_timeout: bool
+                Add some noise to remove timeout clutter
     """
-    
-    regular_marker = 'x'
-    timeout_marker = '+'
-    grey_marker = '.'
+
+    if markers is None or len(markers) != 3:
+        regular_marker = 'x'
+        timeout_marker = '+'
+        grey_marker = '.'
+    else:
+        regular_marker = markers[0]
+        timeout_marker = markers[1]
+        grey_marker = markers[2]
+
+    if sizes is None or len(sizes) != 3:
+        s_r = 5
+        s_t = 5
+        s_g = 5
+    else:
+        s_r = sizes[0]
+        s_t = sizes[1]
+        s_g = sizes[2]
+
     c_angle_bisector = "#e41a1c"  # Red
     c_good_points = "#999999"     # Grey
     c_other_points = "k"
@@ -75,7 +94,7 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
                                  ])
 
     # Set up figure
-    fig = figure(1, dpi=100)
+    fig = figure(1, dpi=dpi)
     fig.suptitle(title, fontsize=16)
     ax1 = subplot(aspect='equal')
     ax1.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
@@ -85,14 +104,15 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
         auto_min_val = min([min(x_data), min(y_data), min_val])
     else:
         auto_min_val = min([min(x_data), min(y_data)])
-    auto_max_val = maximum_value
-    
+
     if metric == "runtime":
         timeout_factor = 2
+        timeout_val = maximum_value * timeout_factor
+        auto_max_val = maximum_value
     else:
         timeout_factor = 1
-    
-    timeout_val = maximum_value * timeout_factor
+        timeout_val = 1
+        auto_max_val = max([max(x_data), max(y_data)])
 
     # Plot angle bisector and reference_lines
     out_up = auto_max_val
@@ -145,12 +165,11 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
     # Regular points
     if len(grey_idx) > 1:
         ax1.scatter(x_data[grey_idx], y_data[grey_idx], marker=grey_marker,
-                    c=c_good_points)
+                    edgecolor='', facecolor=c_good_points, s=s_g)
     ax1.scatter(x_data[rest_idx], y_data[rest_idx], marker=regular_marker,
-                c=c_other_points)
+                c=c_other_points, s=s_r)
 
     if metric == "runtime":
-
         # max_val lines
         ax1.plot([maximum_value, maximum_value], [auto_min_val, maximum_value],
                  c=c_other_points, linestyle="--", zorder=0, linewidth=size)
@@ -158,13 +177,22 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
                  c=c_other_points, linestyle="--", zorder=0, linewidth=size)
     
         # Timeout points
-        ax1.scatter([timeout_val]*len(timeout_x), y_data[timeout_x],
-                    marker=timeout_marker, c=c_other_points)
-        ax1.scatter([timeout_val]*len(timeout_both),
-                    [timeout_val]*len(timeout_both),
-                    marker=timeout_marker, c=c_other_points)
-        ax1.scatter(x_data[timeout_y], [timeout_val]*len(timeout_y),
-                    marker=timeout_marker, c=c_other_points)
+        if jitter_timeout:
+            scat_x = np.random.randn(len(timeout_x), 1)*0.1*timeout_val + timeout_val
+            scat_y = np.random.randn(len(timeout_y), 1)*0.1*timeout_val + timeout_val
+            scat_both = (np.random.randn(len(timeout_both), 1)*0.1*timeout_val + timeout_val,
+                         np.random.randn(len(timeout_both), 1)*0.1*timeout_val + timeout_val)
+        else:
+            scat_x = [timeout_val]*len(timeout_x)
+            scat_y = [timeout_val]*len(timeout_y)
+            scat_both = ([timeout_val]*len(timeout_both), [timeout_val]*len(timeout_both))
+
+        ax1.scatter(scat_x, y_data[timeout_x],
+                    marker=timeout_marker, c=c_other_points, s=s_t)
+        ax1.scatter(scat_both[0], scat_both[1],
+                    marker=timeout_marker, c=c_other_points, s=s_t)
+        ax1.scatter(x_data[timeout_y], scat_y,
+                    marker=timeout_marker, c=c_other_points, s=s_t)
 
     # Plot timeout line
 #    ax1.plot([timeout_val, timeout_val], [auto_min_val, timeout_val],
@@ -190,8 +218,6 @@ def plot_scatter_plot(x_data, y_data, labels, title="", debug=False,
         # Plot legend
         leg = ax1.legend(loc='best', fancybox=True)
         leg.get_frame().set_alpha(0.5)
-
-    tight_layout()
 
     max_val = timeout_val * timeout_factor
     auto_min_val *= 0.9

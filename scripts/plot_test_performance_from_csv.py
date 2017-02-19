@@ -4,7 +4,9 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import csv
 import itertools
 import sys
+import warnings
 
+from plottingscripts.utils.merge_test_performance_different_times import fill_trajectory
 from plottingscripts.utils import read_util, plot_util
 import plottingscripts.plotting.plot_methods as plot_methods
 
@@ -34,8 +36,6 @@ def main():
                         default="", help="Where to save plot instead of showing it?")
     parser.add_argument("-t", "--title", dest="title",
                         default=None, help="Optional supertitle for plot")
-    parser.add_argument("--maxvalue", dest="maxvalue", type=float,
-                        default=sys.maxint, help="Replace all values higher than this?")
     parser.add_argument("--ylabel", dest="ylabel",
                         default="Minfunction value", help="y label")
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
@@ -52,39 +52,50 @@ def main():
     sys.stdout.write("\nFound " + str(len(unknown)) + " arguments\n")
 
     if len(unknown) < 2:
-        print "To less arguments given"
+        print("To less arguments given")
         parser.print_help()
         sys.exit(1)
 
     # Get files and names
     file_list, name_list = read_util.get_file_and_name_list(unknown, match_file='.csv')
     for idx in range(len(name_list)):
-        assert len(file_list[idx]) == 1, "%s" % str(file_list[idx])
-        print "%20s contains %d file(s)" % (name_list[idx], len(file_list[idx]))
+        print("%20s contains %d file(s)" % (name_list[idx], len(file_list[idx])))
 
     times = list()
     performances = list()
     for idx, name in enumerate(name_list):
-        t = None
-        p = None
-        print "Processing %s" % name
-        fh = open(file_list[idx][0], 'r')
-        reader = csv.reader(fh)
-        for row in reader:
-            if t is None:
-                # first row
-                p = list([list() for i in range(len(row)-1)])
-                t = list()
+        trajectories = []
+        times_ = []
+        print("Processing %s" % name)
+        for csv_file in file_list[idx]:
+            # print(file_list[idx][0])
+            fh = open(csv_file, 'r')
+            reader = csv.reader(fh)
+            p = list()
+            t = list()
+            for i, row in enumerate(reader):
+                if i == 0:
+                    continue
+                if float(row[0]) < 0:
+                    warnings.warn('Found time stamp < 0 in file %s' % csv_file)
+                    continue
+                t.append(float(row[0]))
+                p.append(float(row[2]))
+
+            if len(t) == 0:
+                print('Found empty file %s' % csv_file)
                 continue
-            t.append(float(row[0]))
-            del row[0]
-            [p[i].append(float(row[i])) for i in range(len(row))]
-        times.append(t)
-        performances.append(p)
+
+            times_.append(t)
+            trajectories.append(p)
+        trajectories, times_ = fill_trajectory(trajectories, times_)
+
+        times.append(times_)
+        performances.append(trajectories.transpose())
 
     # Sort names alphabetical as done here:
     # http://stackoverflow.com/questions/15610724/sorting-multiple-lists-in-python-based-on-sorting-of-a-single-list
-    sorted_lists = sorted(itertools.izip(name_list, times, performances), key=lambda x: x[0])
+    sorted_lists = sorted(zip(name_list, times, performances), key=lambda x: x[0])
     name_list, times, performances = [[x[i] for x in sorted_lists] for i in range(3)]
 
     prop = {}
@@ -103,9 +114,10 @@ def main():
                                                         y_max=args.ymax,
                                                         x_min=args.xmin,
                                                         x_max=args.xmax,
-                                                        properties=prop, scale_std=1)
+                                                        properties=prop,
+                                                        scale_std=1)
     if args.save != "":
-        print "Save plot to %s" % args.save
+        print("Save plot to %s" % args.save)
         plot_util.save_plot(fig, args.save, plot_util.get_defaults()['dpi'])
     else:
         fig.show()

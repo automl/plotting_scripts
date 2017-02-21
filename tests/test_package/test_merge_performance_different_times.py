@@ -78,3 +78,10 @@ class plotUtilTest(unittest.TestCase):
                                 mdt.fill_trajectory,
                                 performance_list=(value_a, value_b),
                                 time_list=(time_a, time_b))
+
+    def test_fill_one_array(self):
+        value = [[0.5, 1.0, 1.5, 2.0]]
+        time = [[1, 2, 3, 4]]
+        v, t = mdt.fill_trajectory(performance_list=value, time_list=time)
+        self.assertEqual(v.shape, (1, 4))
+        self.assertEqual(t.shape, (4, ))

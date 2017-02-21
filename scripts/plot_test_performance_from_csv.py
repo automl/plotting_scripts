@@ -12,7 +12,10 @@ import plottingscripts.plotting.plot_methods as plot_methods
 
 
 def main():
-    prog = "python merge_performance_different_times.py <WhatIsThis> " \
+    """Plot several validation runs which do not share time steps!
+    """
+
+    prog = "python plot_test_performance_from_csv.py <WhatIsThis> " \
            "one/or/many/*ClassicValidationResults*.csv"
     description = "Merge results to one csv"
 

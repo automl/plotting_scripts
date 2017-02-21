@@ -5,6 +5,9 @@ import pandas as pd
 
 
 def fill_trajectory(performance_list, time_list, replace_nan=np.NaN):
+    if len(performance_list) < 2:
+        return np.array(performance_list), np.array(time_list).flatten()
+
     frame_dict = OrderedDict()
     counter = np.arange(0, len(performance_list))
     for p, t, c in zip(performance_list, time_list, counter):

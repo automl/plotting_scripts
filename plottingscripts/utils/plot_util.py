@@ -46,6 +46,7 @@ def get_defaults():
                "gridalpha": 0.5,
                "dpi": 100,
                "legendsize": 12,
+               "legendlocation": "best",
                "ticklabelsize": 12
                }
     return default

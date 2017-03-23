@@ -16,7 +16,10 @@ import plottingscripts.utils.macros
 def main():
     prog = "python plot_BootstrappedValidationPerformance.py <WhatIsThis> " \
            "one/or/many/*ClassicValidationResults*.csv"
-    description = "Plot a median trace with quantiles for multiple experiments"
+    description = "Plot a median trace with quantiles for multiple experiments." \
+                  " For each <WhatIsThis> that does not contain the string " \
+                  "'GGA' bootstrap samples are drawn and test of best train is " \
+                  "plotted"
 
     parser = ArgumentParser(description=description, prog=prog)
 
@@ -138,7 +141,7 @@ def main():
                     # sample #bootstrap-sample-size idxs
                     sample_idx = helper.bootstrap_sample_idx(
                             num_samples=len(tmp_tst_perf_list),
-                            boot_strap_size=bootstrap_samples, rng=args.seed)
+                            boot_strap_size=bootstrap_samples, rng=args.seed + i)
                     # then get test value of best train
                     best_train = np.argmin(tmp_trn_perf_list[sample_idx, t])
                     # and use this as new performance for pseudorun i at time t

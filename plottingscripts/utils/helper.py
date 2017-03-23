@@ -46,7 +46,7 @@ def fill_property_dict(arguments, defaults):
             except ValueError:
                 # Value is not an integer
                 continue
-        except TypeError:
+        except:
             properties[key] = properties[key]
 
     return properties

@@ -80,7 +80,7 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    if args.ylabel:
+    if not args.ylabel:
         args.ylabel = "%s performance on instances" % args.agglomeration
 
     # Get files and names
@@ -145,7 +145,7 @@ def main():
                     # then get test value of best train
                     best_train = np.argmin(tmp_trn_perf_list[sample_idx, t])
                     # and use this as new performance for pseudorun i at time t
-                    new_performance[i, t] = tmp_tst_perf_list[best_train, t]
+                    new_performance[i, t] = (tmp_tst_perf_list[sample_idx, t])[best_train]
             performance.append(new_performance)
         else:
             performance.append(tmp_tst_perf_list)

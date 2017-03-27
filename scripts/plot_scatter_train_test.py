@@ -111,7 +111,7 @@ def main():
                     min_ = np.min((min_, entry["Test Set Performance"]))
                     max_ = np.max((max_, entry["Test Set Performance"]))
         value_dict[name_list[name]] = np.array(value_dict[name_list[name]]).ravel()
-        print value_dict[name_list[name]].shape
+        print(value_dict[name_list[name]].shape)
     name_ls = set(name_ls)
 
     ################### Calculate correlation
@@ -179,7 +179,7 @@ def main():
                         label="default", marker=properties["markers"].next(),
                         c='k', edgecolor="",
                         s=properties["markersize"], alpha=1, zorder=99)
-    ax1.legend(loc="lower right", framealpha=1, fancybox=True, ncol=1,
+    ax1.legend(loc=properties["legendlocation"], framealpha=1, fancybox=True, ncol=1,
                scatterpoints=1, prop={'size': int(properties["legendsize"])})
 
     ax1.set_xlabel("PAR10 on training set", fontsize=properties["labelfontsize"])
@@ -208,7 +208,7 @@ def main():
         ax1.set_yscale("log")
 
     if args.save != "":
-        print "Save plot to %s" % args.save
+        print("Save plot to %s" % args.save)
         plot_util.save_plot(fig, args.save, plot_util.get_defaults()['dpi'])
     else:
         fig.show()

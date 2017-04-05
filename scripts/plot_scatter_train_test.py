@@ -52,12 +52,16 @@ def main():
     parser.add_argument("--cutoff", dest="cutoff", type=int, default=None,
                         help="Only used for ObjectiveMatrix to calculate PAR "
                              "score")
-    parser.add_argument("--default", dest="default", default=False,
-                        action="store_true", help="If RANDOM given then mark "
-                                                  "the first config as default")
+    parser.add_argument("--firstRandomAsDefault", dest="firstRandomAsDefault",
+                        default=False, action="store_true",
+                        help="If 'RANDOM' in name, then use the first config "
+                             "as default")
     parser.add_argument("--correlation", dest="correlation", default=False,
                         action="store_true",
                         help="Show Spearman rank-order correlation coefficient")
+    parser.add_argument("--default", dest="default", default=False,
+                        action="store_true",
+                        help="If 'default' in name use different marker style")
 
     # Properties
     # We need this to show defaults for -h
@@ -158,27 +162,32 @@ def main():
              alpha=float(properties["gridalpha"]))
 
     for base_name in name_ls:
-        if "DEFAULT" in base_name.upper():
+        if (args.default and "DEFAULT" in base_name.upper()) or \
+            (base_name.upper() == "RANDOM" and args.firstRandomAsDefault):
             # Do not plot using alpha
             alpha = 1
             zorder = 99
             c = 'k'
+            marker = 'x'
+            edgecolor = c
+            size = properties["markersize"]*2
+            label="default configuration"
         else:
             alpha = 0.5
             zorder = None
             c = properties["colors"].next()
+            edgecolor = ""
+            marker = properties["markers"].next()
+            size = properties["markersize"]
+            label=base_name.replace("_", " ")
+
         ax1.scatter(value_dict[base_name + "_train"],
                     value_dict[base_name + "_test"],
-                    label=base_name.replace("_", " "),
-                    marker=properties["markers"].next(),
-                    c=c, edgecolor="",
-                    s=properties["markersize"], alpha=alpha, zorder=zorder)
-        if (base_name.upper() == "RANDOM" and args.default):
-            ax1.scatter(value_dict[base_name + "_train"][0],
-                        value_dict[base_name + "_test"][0],
-                        label="default", marker=properties["markers"].next(),
-                        c='k', edgecolor="",
-                        s=properties["markersize"], alpha=1, zorder=99)
+                    label=label,
+                    marker=marker,
+                    c=c, edgecolor=edgecolor,
+                    s=size, alpha=alpha, zorder=zorder, linewidth=3)
+
     ax1.legend(loc=properties["legendlocation"], framealpha=1, fancybox=True, ncol=1,
                scatterpoints=1, prop={'size': int(properties["legendsize"])})
 

@@ -47,7 +47,8 @@ def get_defaults():
                "dpi": 100,
                "legendsize": 12,
                "legendlocation": "best",
-               "ticklabelsize": 12
+               "ticklabelsize": 12,
+               "drawstyle": "default"
                }
     return default
 

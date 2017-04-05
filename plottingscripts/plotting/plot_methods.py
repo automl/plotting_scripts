@@ -23,6 +23,8 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
         properties = dict()
     properties = plot_util.fill_with_defaults(properties)
 
+    print(properties)
+
     # Set up figure
     ratio = 5
     gs = matplotlib.gridspec.GridSpec(ratio, 1)
@@ -72,7 +74,7 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
         ax1.plot(time_list[idx], m, color=color,
                  linewidth=int(properties["linewidth"]), linestyle=linestyle,
                  marker=marker, markersize=int(properties["markersize"]),
-                 label=name_list[idx])
+                 label=name_list[idx], drawstyle=properties["drawstyle"])
 
         # find out show from for this time_list
         show_from = 0

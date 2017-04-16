@@ -2,11 +2,11 @@
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import sys
 import csv
-import os
+
 import numpy as np
 import matplotlib.pyplot as plt
-from plottingscripts.utils import read_util
-from plottingscripts.utils import plot_util
+from collections import OrderedDict
+from plottingscripts.utils import read_util, plot_util
 
 
 def main():
@@ -54,11 +54,16 @@ def main():
     datasets = set()
     strategies = set()
     strategy_dataset = {}
+    strategy_color = {}
+    colors = plot_util.get_plot_colors()
+
     for idx in range(len(name_list)):
         dataset = name_list[idx][0]
         strategy = name_list[idx][1]
         datasets.add(dataset)
         strategies.add(strategy)
+        if strategy not in strategy_color:
+            strategy_color[strategy] = next(colors)
 
         if strategy not in strategy_dataset:
             strategy_dataset[strategy] = {}
@@ -68,8 +73,8 @@ def main():
         print("%20s contains %d file(s)" %
               (name_list[idx], len(file_list[idx])))
 
-    results = {}
-    for strategy in strategies:
+    results = OrderedDict()
+    for strategy in sorted(strategies):
         means = list()
         labels = []
         for dataset in sorted(strategy_dataset[strategy]):
@@ -94,12 +99,10 @@ def main():
 
     fig, ax = plt.subplots()
 
-    colors = ['r', 'b', 'g']
-
     rects = []
     legends = []
     for idx, strategy in enumerate(results):
-        rects.append(ax.bar(ind + idx * width, results[strategy], width, color=colors[idx]))
+        rects.append(ax.bar(ind + idx * width, results[strategy], width, color=strategy_color[strategy]))
         legends.append(strategy)
 
     # add some text for labels, title and axes ticks

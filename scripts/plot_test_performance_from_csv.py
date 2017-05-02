@@ -39,6 +39,8 @@ def main():
                         default="", help="Where to save plot instead of showing it?")
     parser.add_argument("-t", "--title", dest="title",
                         default=None, help="Optional supertitle for plot")
+    parser.add_argument("--xlabel", dest="xlabel",
+                        default="time [sec]", help="x label")
     parser.add_argument("--ylabel", dest="ylabel",
                         default="Minfunction value", help="y label")
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
@@ -111,6 +113,7 @@ def main():
                                                         title=args.title,
                                                         name_list=name_list,
                                                         ylabel=args.ylabel,
+                                                        xlabel=args.xlabel,
                                                         logy=args.logy,
                                                         logx=args.logx,
                                                         y_min=args.ymin,

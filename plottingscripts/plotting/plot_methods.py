@@ -29,6 +29,8 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
     ratio = 5
     gs = matplotlib.gridspec.GridSpec(ratio, 1)
     fig = figure(1, dpi=int(properties['dpi']))
+    fig.set_size_inches(properties["incheswidth"], properties["inchesheight"])
+
     ax1 = subplot(gs[0:ratio, :])
     ax1.grid(True, linestyle='-', which='major', color=properties["gridcolor"],
              alpha=float(properties["gridalpha"]))
@@ -43,7 +45,6 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
 
     for idx, performance in enumerate(performance_list):
         performance = np.array(performance)
-
         color = next(properties["colors"])
         marker = next(properties["markers"])
         linestyle = next(properties["linestyles"])
@@ -51,7 +52,6 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
 
         if logx and time_list[idx][0] == 0:
             time_list[idx][0] = 10**-1
-
         print("Plot %s" % agglomeration)
         if agglomeration == "mean":
             m = np.mean(performance, axis=0)
@@ -65,7 +65,7 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
             raise ValueError("Unknown agglomeration: %s" % agglomeration)
 
         if logy:
-            lower[lower < 0.0001] = 0.0001
+            lower[lower < 10e-10] = 10e-10
 
         # Plot m and fill between lower and upper
         if scale_std >= 0 and len(performance) > 1:

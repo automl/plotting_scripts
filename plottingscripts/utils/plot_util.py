@@ -48,7 +48,9 @@ def get_defaults():
                "legendsize": 12,
                "legendlocation": "best",
                "ticklabelsize": 12,
-               "drawstyle": "default"
+               "drawstyle": "default",
+               "incheswidth": 8.0,
+               "inchesheight": 6.0
                }
     return default
 

@@ -23,12 +23,13 @@ def fill_trajectory(performance_list, time_list, replace_nan=np.NaN):
     time_ = merged.index.values
 
     performance[np.isnan(performance)] = replace_nan
-
     if not np.isfinite(performance).all():
         raise ValueError("\nCould not merge lists, because \n"
                          "\t(a) one list is empty?\n"
                          "\t(b) the lists do not start with the same times and"
                          " replace_nan is not set?\n"
-                         "\t(c) any other reason.")
+                         "\t(c) replace_nan is not set and there are non valid "
+                         "numbers in the list\n"
+                         "\t(d) any other reason.")
 
     return performance, time_

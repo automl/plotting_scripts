@@ -50,6 +50,8 @@ def main():
                         help="Plot mean or median")
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true",
                         default=False, help="print number of runs on plot")
+    parser.add_argument("--scaleY", dest="scale_y", default=1, type=float,
+                        help="Multiply all Y values with this factor")
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--train', dest="train",  default=False,
                        action='store_true')
@@ -135,6 +137,11 @@ def main():
 
     if args.xmin is None and show_from != 0:
         args.xmin = show_from
+
+    if args.scale_y != 1:
+        print("Scale Y values with %g", args.scale_y)
+        performance = np.array(performance)
+        performance = args.scale_y * performance
 
     properties = helper.fill_property_dict(arguments=args, defaults=defaults)
     new_time_list = [time_ for i in range(len(performance))]

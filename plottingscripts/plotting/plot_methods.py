@@ -65,7 +65,9 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
             raise ValueError("Unknown agglomeration: %s" % agglomeration)
 
         if logy:
-            lower[lower < 10e-10] = 10e-10
+            lower[lower < properties["loweryloglimit"]] = properties["loweryloglimit"]
+            upper[upper < properties["loweryloglimit"]] = properties["loweryloglimit"]
+            m[m < properties["loweryloglimit"]] = properties["loweryloglimit"]
 
         # Plot m and fill between lower and upper
         if scale_std >= 0 and len(performance) > 1:

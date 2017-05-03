@@ -50,7 +50,8 @@ def get_defaults():
                "ticklabelsize": 12,
                "drawstyle": "default",
                "incheswidth": 8.0,
-               "inchesheight": 6.0
+               "inchesheight": 6.0,
+               "loweryloglimit": 10e-10
                }
     return default
 

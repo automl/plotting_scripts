@@ -12,7 +12,7 @@ from matplotlib.pyplot import tight_layout, figure, subplots_adjust, subplot, sa
 import matplotlib.gridspec
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from plottingscripts.utils import read_util, plot_util
+from plottingscripts.utils import read_util, plot_util, macros
 
 
 def main():
@@ -81,8 +81,8 @@ def main():
 
     value_dict = collections.OrderedDict()
     name_ls = []
-    min_ = sys.maxint
-    max_ = -sys.maxint
+    min_ = macros.MAXINT
+    max_ = -macros.MAXINT
 
     for name in range(len(name_list)):
         base_name = "_".join(name_list[name].split("_")[:-1])
@@ -175,9 +175,9 @@ def main():
         else:
             alpha = 0.5
             zorder = None
-            c = properties["colors"].next()
+            c = next(properties["colors"])
             edgecolor = ""
-            marker = properties["markers"].next()
+            marker = next(properties["markers"])
             size = properties["markersize"]
             label=base_name.replace("_", " ")
 

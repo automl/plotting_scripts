@@ -1,3 +1,5 @@
+import typing
+
 from matplotlib.pyplot import tight_layout, figure, subplots_adjust, subplot, \
     savefig, show, tick_params
 import matplotlib.gridspec
@@ -7,13 +9,66 @@ import plottingscripts.utils.plot_util as plot_util
 import plottingscripts.utils.macros
 
 
-def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
-                                     title=None, logy=False, logx=False,
-                                     properties=None, y_min=None,
-                                     y_max=None, x_min=None, x_max=None,
-                                     ylabel="Performance", xlabel="time [sec]",
-                                     scale_std=1, agglomeration="mean",
-                                     legend=True):
+def plot_optimization_trace_mult_exp(time_list:typing.List, 
+                                     performance_list:typing.List, 
+                                     name_list:typing.List[str],
+                                     title:str=None, 
+                                     logy:bool=False, 
+                                     logx:bool=False,
+                                     properties:typing.Mapping=None, 
+                                     y_min:float=None,
+                                     y_max:float=None, 
+                                     x_min:float=None, 
+                                     x_max:float=None,
+                                     ylabel:str="Performance", 
+                                     xlabel:str="time [sec]",
+                                     scale_std:float=1, 
+                                     agglomeration:str="mean",
+                                     legend:bool=True,
+                                     step:bool=False):
+    '''
+        plot performance over time
+        
+        Arguments
+        ---------
+        time_list: typing.List[np.ndarray T]
+            for each system (in name_list) T time stamps (on x)
+        performance_list: typing.List[np.ndarray TxN]
+            for each system (in name_list) an array of size T x N where N is the number of repeated runs of the system
+        name_list: typing.List[str]
+             names of all systems -- order has to be the same as in performance_list and time_list
+        title: str
+            title of the plot
+        logy: bool
+            y on log-scale
+        logx: bool
+            x on log-scale
+        properties: typing.Mapping
+            possible fields: "linestyles", "colors", "markers", "markersize", "labelfontsize", "linewidth", "titlefontsize", 
+                             "gridcolor", "gridalpha", "dpi", "legendsize", "legendlocation", "ticklabelsize", 
+                             "drawstyle", "incheswidth", "inchesheight", "loweryloglimit"
+        y_min:float   
+            y min value
+        y_max:float
+            y max value
+        x_min:float
+            x min value
+        x_max:float
+            x max value
+        ylabel: str
+            y label
+        xlabel: str
+            y label
+        scale_std: float
+            scale of std (only used with agglomeration=="mean")
+        agglomeration: str
+            aggreation over repeated runs (either mean or median)
+        legend: bool
+            plot legend?
+        step: bool
+            plot as step function (True) or with linear interpolation (False)
+    '''
+    
 
     if scale_std != 1 and agglomeration == "median":
         raise ValueError("Can not scale_std when plotting median")
@@ -23,7 +78,7 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
         properties = dict()
     properties = plot_util.fill_with_defaults(properties)
 
-    print(properties)
+    #print(properties)
 
     # Set up figure
     ratio = 5
@@ -69,14 +124,27 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
             upper[upper < properties["loweryloglimit"]] = properties["loweryloglimit"]
             m[m < properties["loweryloglimit"]] = properties["loweryloglimit"]
 
+
+
         # Plot m and fill between lower and upper
         if scale_std >= 0 and len(performance) > 1:
             ax1.fill_between(time_list[idx], lower, upper, facecolor=color,
-                             alpha=0.3, edgecolor=color)
-        ax1.plot(time_list[idx], m, color=color,
+                             alpha=0.3, edgecolor=color, 
+                             step="post" if step else None
+                             )
+        if step:
+            ax1.step(time_list[idx], m, color=color,
+                 linewidth=int(properties["linewidth"]), linestyle=linestyle,
+                 marker=marker, markersize=int(properties["markersize"]),
+                 label=name_list[idx],
+                 where="post"
+                 )
+        else:    
+            ax1.plot(time_list[idx], m, color=color,
                  linewidth=int(properties["linewidth"]), linestyle=linestyle,
                  marker=marker, markersize=int(properties["markersize"]),
                  label=name_list[idx], drawstyle=properties["drawstyle"])
+        
 
         # find out show from for this time_list
         show_from = 0

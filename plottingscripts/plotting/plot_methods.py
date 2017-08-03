@@ -107,7 +107,7 @@ def plot_optimization_trace_mult_exp(time_list:typing.List,
 
         if logx and time_list[idx][0] == 0:
             time_list[idx][0] = 10**-1
-        print("Plot %s" % agglomeration)
+        #print("Plot %s" % agglomeration)
         if agglomeration == "mean":
             m = np.mean(performance, axis=0)
             lower = m - np.std(performance, axis=0)*scale_std

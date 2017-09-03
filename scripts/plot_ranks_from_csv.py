@@ -58,10 +58,7 @@ def read_data(file_list, name_list):
             trajectories.append(p)
 
         if len(trajectories) != len(file_list[idx]):
-            to_skip.add(dataset)
-            continue
-
-        trajectories, times_ = fill_trajectory(trajectories, times_)
+            raise ValueError('something wrong with dataset %s' %dataset)
 
         dataset_list.add(dataset)
         if dataset not in dataset_dict:
@@ -184,7 +181,7 @@ def main():
                                                             match_file='.csv',
                                                             len_name=2)
     for idx in range(len(name_list)):
-        assert len(file_list[idx]) == 1, "%s" % file_list[idx]
+        # assert len(file_list[idx]) == 1, "%s" % file_list[idx]
         print("%20s contains %d file(s)" %
               (name_list[idx], len(file_list[idx])))
 
@@ -213,8 +210,7 @@ def main():
             num_performances = len(dataset_dict[dataset][est]['performances'])
             num_performances_per_estimator.extend([est] * num_performances)
             performances_per_estimator.extend(dataset_dict[dataset][est]['performances'])
-            times_per_estimator.extend(
-                [dataset_dict[dataset][est]['times']] * num_performances)
+            times_per_estimator.extend(dataset_dict[dataset][est]['times'])
 
         performances, times = fill_trajectory(
             performance_list=performances_per_estimator,

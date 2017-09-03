@@ -158,6 +158,10 @@ def main():
                         default=False, help="print number of runs on plot")
     parser.add_argument("--samples", dest="samples", type=int,
                         default=10, help="Number of bootstrap samples to plot")
+    parser.add_argument("--xlabel", type=str,
+                        default=None, help="x label (overrides default)")
+    parser.add_argument("--ylabel",type=str,
+                        default=None, help="y label (overrides default)")
 
     # Properties
     # We need this to show defaults for -h
@@ -269,12 +273,16 @@ def main():
         prop[key] = args_dict[key]
     #prop['linestyles'] = itertools.cycle(["-", ":"])
 
+    ylabel = "average rank (%d bootstrap samples)" % args.samples
+    if args.ylabel:
+        ylabel = args.ylabel
     fig = plot_methods.plot_optimization_trace_mult_exp(
         time_list=time_list, performance_list=performance_list,
         title=args.title, name_list=estimator_list, logy=args.logy,
         logx=args.logx, y_min=args.ymin, y_max=args.ymax,
         x_min=args.xmin, x_max=args.xmax,
-        ylabel="average rank (%d bootstrap samples)" % args.samples,
+        xlabel=args.xlabel,
+        ylabel=ylabel,
         scale_std=0, properties=prop)
 
     if args.save != "":

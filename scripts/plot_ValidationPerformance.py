@@ -142,8 +142,8 @@ def main():
         print("Scale Y values with %g", args.scale_y)
         performance = np.array(performance)
         performance = args.scale_y * performance
-
     properties = helper.fill_property_dict(arguments=args, defaults=defaults)
+    print(properties)
     new_time_list = [time_ for i in range(len(performance))]
     fig = plot_methods.\
         plot_optimization_trace_mult_exp(time_list=new_time_list,
@@ -156,6 +156,7 @@ def main():
                                          x_min=args.xmin,
                                          x_max=args.xmax,
                                          agglomeration=args.agglomeration,
+                                         legend=(args.legendlocation is None),
                                          ylabel=args.ylabel, xlabel=args.xlabel,
                                          properties=properties)
     if args.save != "":

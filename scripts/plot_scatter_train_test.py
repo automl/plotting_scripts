@@ -75,7 +75,6 @@ def main():
     # Get files and names
     file_list, name_list = read_util.get_file_and_name_list(unknown,
                                                             match_file='.csv')
-
     if len(name_list) % 2 != 0:
         raise ValueError("NOT A MULTIPLE OF TWO. ALWAYS NEED TEST AND TRAIN(%s)")
 
@@ -116,7 +115,7 @@ def main():
                     max_ = np.max((max_, entry["Test Set Performance"]))
         value_dict[name_list[name]] = np.array(value_dict[name_list[name]]).ravel()
         print(value_dict[name_list[name]].shape)
-    name_ls = set(name_ls)
+    name_ls = sorted(list(set(name_ls)))
 
     ################### Calculate correlation
     if args.correlation:
@@ -161,7 +160,7 @@ def main():
     ax1.grid(True, linestyle='-', which='major', color=properties["gridcolor"],
              alpha=float(properties["gridalpha"]))
 
-    for base_name in name_ls:
+    for base_name in reversed(name_ls):
         if (args.default and "DEFAULT" in base_name.upper()) or \
             (base_name.upper() == "RANDOM" and args.firstRandomAsDefault):
             # Do not plot using alpha
@@ -174,7 +173,7 @@ def main():
             label="default configuration"
         else:
             alpha = 0.5
-            zorder = None
+            zorder = 1
             c = next(properties["colors"])
             edgecolor = ""
             marker = next(properties["markers"])
@@ -188,8 +187,9 @@ def main():
                     c=c, edgecolor=edgecolor,
                     s=size, alpha=alpha, zorder=zorder, linewidth=3)
 
-    ax1.legend(loc=properties["legendlocation"], framealpha=1, fancybox=True, ncol=1,
-               scatterpoints=1, prop={'size': int(properties["legendsize"])})
+    if args.legendlocation != "None":
+        ax1.legend(loc=properties["legendlocation"], framealpha=1, fancybox=True, ncol=1,
+                   scatterpoints=1, prop={'size': int(properties["legendsize"])})
 
     ax1.set_xlabel("PAR10 on training set", fontsize=properties["labelfontsize"])
     ax1.set_ylabel("PAR10 on test set", fontsize=properties["labelfontsize"])

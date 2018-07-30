@@ -139,6 +139,7 @@ def plot_optimization_trace_mult_exp(time_list:typing.List,
                  label=name_list[idx],
                  where="post"
                  )
+
         else:    
             ax1.plot(time_list[idx], m, color=color,
                  linewidth=int(properties["linewidth"]), linestyle=linestyle,

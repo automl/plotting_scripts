@@ -172,30 +172,33 @@ def main():
             edgecolor = c
             size = properties["markersize"]*2
             label="default configuration"
+            linewidth=3
         else:
             alpha = 0.5
             zorder = None
             c = next(properties["colors"])
-            edgecolor = ""
+            edgecolor = ''
             marker = next(properties["markers"])
             size = properties["markersize"]
             label=base_name.replace("_", " ")
-
+            linewidth=0
         ax1.scatter(value_dict[base_name + "_train"],
                     value_dict[base_name + "_test"],
                     label=label,
                     marker=marker,
                     c=c, edgecolor=edgecolor,
-                    s=size, alpha=alpha, zorder=zorder, linewidth=3)
+                    s=size, alpha=alpha, zorder=zorder, linewidth=linewidth)
 
-    ax1.legend(loc=properties["legendlocation"], framealpha=1, fancybox=True, ncol=1,
-               scatterpoints=1, prop={'size': int(properties["legendsize"])})
+    if properties["legendlocation"] != 'None':
+        ax1.legend(loc=properties["legendlocation"], framealpha=1, fancybox=True, ncol=1,
+                   scatterpoints=1, prop={'size': int(properties["legendsize"])})
 
     ax1.set_xlabel("PAR10 on training set", fontsize=properties["labelfontsize"])
     ax1.set_ylabel("PAR10 on test set", fontsize=properties["labelfontsize"])
     tick_params(axis='both', which='major', labelsize=properties["ticklabelsize"])
 
     ax1.plot([0.1, 3500], [0.1, 3500], c='k', zorder=0)
+    
     if args.max is not None:
         if args.min is not None:
             ax1.set_xlim([args.min, args.max])

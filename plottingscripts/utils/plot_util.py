@@ -6,7 +6,7 @@ def get_empty_iterator():
 
 
 def get_plot_markers():
-    return itertools.cycle(['o'])
+    return itertools.cycle(['o', ])
     #return itertools.cycle(['o', 's', 'x', '^', 'p', 'v', '>', '<', '8', '*',
     #                        '+', 'D'])
 
@@ -21,7 +21,10 @@ def get_single_linestyle():
 
 def get_plot_colors():
     # color brewer, 2nd qualitative 9 color scheme (http://colorbrewer2.org/)
-    return itertools.cycle([#"#000000",    # Black
+    return itertools.cycle([
+            #"#d95f02", # Orange
+            #"#1b9e77", # turqoise
+            #"#000000",    # Black
                             "#e41a1c",    # Red
                             "#377eb8",    # Blue
                             "#4daf4a",    # Green

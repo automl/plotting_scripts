@@ -116,7 +116,7 @@ def main():
                     max_ = np.max((max_, entry["Test Set Performance"]))
         value_dict[name_list[name]] = np.array(value_dict[name_list[name]]).ravel()
         print(value_dict[name_list[name]].shape)
-    name_ls = set(name_ls)
+    name_ls = sorted(list(set(name_ls)))
 
     ################### Calculate correlation
     if args.correlation:
@@ -161,7 +161,7 @@ def main():
     ax1.grid(True, linestyle='-', which='major', color=properties["gridcolor"],
              alpha=float(properties["gridalpha"]))
 
-    for base_name in name_ls:
+    for base_name in reversed(name_ls):
         if (args.default and "DEFAULT" in base_name.upper()) or \
             (base_name.upper() == "RANDOM" and args.firstRandomAsDefault):
             # Do not plot using alpha
@@ -175,7 +175,7 @@ def main():
             linewidth=3
         else:
             alpha = 0.5
-            zorder = None
+            zorder = 1
             c = next(properties["colors"])
             edgecolor = ''
             marker = next(properties["markers"])

@@ -37,16 +37,19 @@ def fill_property_dict(arguments, defaults):
     properties = {}
     args_dict = vars(arguments)
     for key in defaults:
-        properties[key] = args_dict[key]
-        try:
-            properties[key] = float(properties[key])
+        if key not in args_dict or args_dict[key] is None:
+            properties[key] = defaults[key]
+        else:
+            properties[key] = args_dict[key]
             try:
-                if int(properties[key]) == properties[key]:
-                    properties[key] = int(properties[key])
-            except ValueError:
-                # Value is not an integer
-                continue
-        except:
-            properties[key] = properties[key]
+                properties[key] = float(properties[key])
+                try:
+                    if int(properties[key]) == properties[key]:
+                        properties[key] = int(properties[key])
+                except ValueError:
+                    # Value is not an integer
+                    continue
+            except:
+                properties[key] = properties[key]
 
     return properties

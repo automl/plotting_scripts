@@ -103,7 +103,7 @@ def plot_optimization_trace_mult_exp(time_list, performance_list, name_list,
         auto_x_min = max(0.1, auto_x_min)
     ax1.set_xlabel(xlabel, fontsize=properties["labelfontsize"])
 
-    if legend:
+    if properties["legendlocation"] != "None":
         leg = ax1.legend(loc=properties["legendlocation"], fancybox=True,
                          prop={'size': int(properties["legendsize"])})
         leg.get_frame().set_alpha(0.5)

@@ -24,8 +24,8 @@ def plot_optimization_trace_mult_exp(time_list:typing.List,
                                      xlabel:str="time [sec]",
                                      scale_std:float=1, 
                                      agglomeration:str="mean",
-                                     legend:bool=True,
-                                     step:bool=False):
+                                     step:bool=False,
+                                     ):
     '''
         plot performance over time
         
@@ -137,14 +137,17 @@ def plot_optimization_trace_mult_exp(time_list:typing.List,
                  linewidth=int(properties["linewidth"]), linestyle=linestyle,
                  marker=marker, markersize=int(properties["markersize"]),
                  label=name_list[idx],
-                 where="post"
+                 where="post",
+                 **properties.get("plot_args", {})
                  )
 
         else:    
             ax1.plot(time_list[idx], m, color=color,
                  linewidth=int(properties["linewidth"]), linestyle=linestyle,
                  marker=marker, markersize=int(properties["markersize"]),
-                 label=name_list[idx], drawstyle=properties["drawstyle"])
+                 label=name_list[idx], drawstyle=properties["drawstyle"],
+                 **properties.get("plot_args", {})
+                 )
         
 
         # find out show from for this time_list

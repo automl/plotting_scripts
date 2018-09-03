@@ -112,6 +112,10 @@ def plot_optimization_trace_mult_exp(time_list:typing.List,
             m = np.mean(performance, axis=0)
             lower = m - np.std(performance, axis=0)*scale_std
             upper = m + np.std(performance, axis=0)*scale_std
+        elif agglomeration == "meanstderr":
+            m = np.mean(performance, axis=0)
+            lower = m - (np.std(performance, axis=0) / np.sqrt(performance.shape[0]))
+            upper = m + (np.std(performance, axis=0) / np.sqrt(performance.shape[0]))
         elif agglomeration == "median":
             m = np.median(performance, axis=0)
             lower = np.percentile(performance, axis=0, q=25)

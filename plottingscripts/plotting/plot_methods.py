@@ -181,7 +181,9 @@ def plot_optimization_trace_mult_exp(time_list:typing.List,
 
     if properties["legendlocation"] != "None":
         leg = ax1.legend(loc=properties["legendlocation"], fancybox=True,
-                         prop={'size': int(properties["legendsize"])})
+                         prop={'size': int(properties["legendsize"])},
+                         **properties.get("legend_args", {})
+                         )
         leg.get_frame().set_alpha(0.5)
 
     tick_params(axis='both', which='major',

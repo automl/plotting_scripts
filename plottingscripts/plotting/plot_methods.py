@@ -47,6 +47,7 @@ def plot_optimization_trace_mult_exp(time_list:typing.List,
             possible fields: "linestyles", "colors", "markers", "markersize", "labelfontsize", "linewidth", "titlefontsize", 
                              "gridcolor", "gridalpha", "dpi", "legendsize", "legendlocation", "ticklabelsize", 
                              "drawstyle", "incheswidth", "inchesheight", "loweryloglimit"
+            > To turn off the legend, set legendlocation='None'
         y_min:float   
             y min value
         y_max:float
@@ -63,8 +64,6 @@ def plot_optimization_trace_mult_exp(time_list:typing.List,
             scale of std (only used with agglomeration=="mean")
         agglomeration: str
             aggreation over repeated runs (either mean or median)
-        legend: bool
-            plot legend?
         step: bool
             plot as step function (True) or with linear interpolation (False)
     '''
